@@ -1,2 +1,61 @@
+[project]
+name = "nisyscfg"
+version = "0.2.1"
+description = "NI System Configuration Python API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "National Instruments" }]
+maintainers = [{ name = "Tyler Krehbiel", email = "tyler.krehbiel@emerson.com" }]
+keywords = ["nisyscfg", "syscfg"]
+dependencies = ["hightime", "six"]
+classifiers = [
+	"Development Status :: 1 - Planning",
+	"Intended Audience :: Developers",
+	"Intended Audience :: Manufacturing",
+	"Intended Audience :: Science/Research",
+	"License :: OSI Approved :: MIT License",
+	"Operating System :: Microsoft :: Windows",
+	"Operating System :: POSIX",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.9",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3.13",
+	"Topic :: System :: Hardware :: Hardware Drivers",
+]
+
+[project.urls]
+repository = "https://github.com/ni/nisyscfg-python"
+changelog = "https://github.com/ni/nisyscfg-python/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["poetry-core>=2.1.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+requires-poetry = ">=2.4.0,<3.0"
+packages = [{ include = "nisyscfg", from = "src" }]
+include = [{ path = "src/nisyscfg/VERSION", format = ["sdist", "wheel"] }]
+
+[tool.poetry.group.test.dependencies]
+pytest = ">=7.2"
+pytest-cov = ">=4.0"
+
+[tool.poetry.group.lint.dependencies]
+flake8 = ">=7.0"
+flake8-pyproject = ">=1.2.4"
+
+[tool.pytest.ini_options]
+addopts = "--cov=nisyscfg --cov-report=term --cov-report=xml --cov-report=html -svv --strict-markers"
+testpaths = ["tests"]
+
+[tool.flake8]
+show_source = true
+max_line_length = 120
+exclude = ["build", "docs", "tests", ".tox", "__pycache__", ".venv*"]
+ignore = ["H404", "H405", "H903", "E501", "W391", "W503", "W504"]
+
 [tool.black]
 line-length = 100
