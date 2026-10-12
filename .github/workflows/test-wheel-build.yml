@@ -14,11 +14,11 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install setuptools and other tools
-        run: python3 -m pip install setuptools wheel twine
+      - name: Set up Poetry
+        uses: ni/python-actions/setup-poetry@aa64e60612cb078b0c2ada666becbd70d4817d55 # v0.7.1
 
       - name: Build packages
-        run: python3 setup.py bdist_wheel
+        run: poetry build
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

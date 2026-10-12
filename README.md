@@ -32,7 +32,7 @@ Install **nisyscfg** from PyPI:
 pip install nisyscfg
 ```
 
-Or, install **nisyscfg** by cloning the main branch and running the following command in the directory of setup.py:
+Or, install **nisyscfg** by cloning the main branch and running the following command from the repository root:
 
 ```bash
 pip install --pre .

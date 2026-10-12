@@ -1,18 +1,13 @@
 name: Publish Package to PyPI
 
 on:
-  push:
-    paths:
-      - src/nisyscfg/VERSION
-    branches:
-      - main
   release:
     types:
       - published
 
 jobs:
   build-and-publish:
-    if: github.repository == 'tkrebes/nisyscfg-python'
+    if: github.repository == 'ni/nisyscfg-python'
     runs-on: ubuntu-latest
 
     steps:
@@ -23,11 +18,11 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install setuptools and other tools
-        run: python3 -m pip install setuptools wheel twine
+      - name: Set up Poetry
+        uses: ni/python-actions/setup-poetry@aa64e60612cb078b0c2ada666becbd70d4817d55 # v0.7.1
 
       - name: Build packages
-        run: python3 setup.py bdist_wheel
+        run: poetry build
 
       - name: Publish distribution to Test PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
@@ -37,7 +32,6 @@ jobs:
         continue-on-error: true
 
       - name: Publish distribution to PyPI
-        if: github.event.action == 'published'
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           password: ${{ secrets.pypi_password }}
