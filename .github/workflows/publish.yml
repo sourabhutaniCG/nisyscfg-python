@@ -1,0 +1,101 @@
+name: Test Trusted Publishing
+
+on:
+  # Temporary trigger so the workflow can run without merging it
+  # into the repository's default branch.
+  push:
+    branches:
+      - feature/oidc-trusted-publishing-migration
+
+  # This can be used if GitHub makes the manual Run workflow
+  # option available for the branch.
+  workflow_dispatch:
+
+# Remove default workflow permissions.
+# Permissions are granted separately to each job.
+permissions: {}
+
+jobs:
+  build-package:
+    name: Build distribution packages
+
+    # Allow this job to run only in the personal test repository
+    # and only from the dedicated test branch.
+    if: >-
+      github.repository == 'sourabhutaniCG/nisyscfg-python' &&
+      github.ref == 'refs/heads/feature/oidc-trusted-publishing-migration'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.9
+        uses: ni/python-actions/setup-python@dee640bba235ae28fdc6b7337c643bd06358ae90 # v0.9.0
+        with:
+          python-version: 3.9
+
+      - name: Set up Poetry
+        uses: ni/python-actions/setup-poetry@aa64e60612cb078b0c2ada666becbd70d4817d55 # v0.7.1
+
+      - name: Build distribution packages
+        run: poetry build
+
+      - name: Verify distribution packages
+        run: |
+          test -n "$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
+          ls -l dist
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: nisyscfg-distribution-packages
+          path: dist/*
+          if-no-files-found: error
+
+  publish-testpypi:
+    name: Publish distribution packages to TestPyPI
+
+    # Apply the repository and branch checks independently to the
+    # publishing job because this job receives the OIDC permission.
+    if: >-
+      github.repository == 'sourabhutaniCG/nisyscfg-python' &&
+      github.ref == 'refs/heads/feature/oidc-trusted-publishing-migration'
+
+    runs-on: ubuntu-latest
+    needs: build-package
+
+    # This name must exactly match:
+    # 1. The GitHub environment name
+    # 2. The environment configured in the TestPyPI Trusted Publisher
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/sourabhutani-nisyscfg-oidc-test/
+
+    # Required for OIDC Trusted Publishing.
+    # Do not provide a TestPyPI password or API token.
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: nisyscfg-distribution-packages
+          path: dist
+
+      - name: Display distribution packages
+        run: ls -l dist
+
+      - name: Publish distribution packages to TestPyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist

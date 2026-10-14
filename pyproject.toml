@@ -1,6 +1,6 @@
 [project]
-name = "nisyscfg"
-version = "0.2.1"
+name = "sourabhutani-nisyscfg-oidc-test"
+version = "0.0.1.dev1"
 description = "NI System Configuration Python API"
 readme = "README.md"
 requires-python = '>=3.9,<4.0'
