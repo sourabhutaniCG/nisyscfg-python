@@ -56,13 +56,19 @@ jobs:
           INPUT_PACKAGE_NAME: ${{ inputs.package-name }}
         run: |
           if [ "$EVENT_NAME" == "release" ]; then
+            if [[ ! "$EVENT_TAG" =~ ^[^/]+/[^/]+$ ]]; then
+              echo "::error::Invalid release tag '$EVENT_TAG'. Expected format: <package-name>/<version>"
+              exit 1
+            fi
+
             PKG_NAME=$(echo "$EVENT_TAG" | cut -d / -f 1)
-            echo "package-name=$PKG_NAME" >> $GITHUB_OUTPUT
+            echo "package-name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+
             PKG_VERSION=$(echo "$EVENT_TAG" | cut -d / -f 2)
-            echo "package-version=$PKG_VERSION" >> $GITHUB_OUTPUT
+            echo "package-version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
           else
-            echo "package-name=$INPUT_PACKAGE_NAME" >> $GITHUB_OUTPUT
-            echo "package-version=unused" >> $GITHUB_OUTPUT
+            echo "package-name=$INPUT_PACKAGE_NAME" >> "$GITHUB_OUTPUT"
+            echo "package-version=unused" >> "$GITHUB_OUTPUT"
           fi
   get_package_info:
     name: Get package info for ${{ needs.get_publish_info.outputs.package-name }}
