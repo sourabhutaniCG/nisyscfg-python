@@ -79,6 +79,7 @@ jobs:
       contents: read
     with:
       package-name: ${{ needs.get_publish_info.outputs.package-name }}
+  # TODO will enablle analayze and checkdocs in next stories PR.   
   # analyze_package:
   #   name: Analyze package for ${{ needs.get_publish_info.outputs.package-name }}
   #   if: ${{ github.event_name == 'release' || inputs.package-name != 'none' }}
@@ -122,18 +123,23 @@ jobs:
         if: github.event_name == 'release'
         uses: ni/python-actions/check-project-version@aa64e60612cb078b0c2ada666becbd70d4817d55 # v0.7.1
         with:
-          project-directory: ${{ github.workspace }}/${{ needs.get_package_info.outputs.package-basepath }}
+          project-directory: ${{ github.workspace }}
           expected-version: ${{ needs.get_publish_info.outputs.package-version }}
       - name: Build distribution packages
         run: poetry build
-        working-directory: ${{ github.workspace }}/${{ needs.get_package_info.outputs.package-basepath }}
+        working-directory: ${{ github.workspace }}
+      - name: Verify distribution packages
+        run: |
+          test -n "$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
+          ls -l dist
       - name: Upload build artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ${{ needs.get_publish_info.outputs.package-name }}-distribution-packages
-          path: ${{ github.workspace }}/${{ needs.get_package_info.outputs.package-basepath }}/dist/*
+          path: dist/*
   publish_to_pypi:
-    name: Publish ${{ needs.get_publish_info.outputs.package-name }} to PyPI
+    name: Publish ${{ needs.get_publish_info.outputs.package-name }} to ${{ env.environment }}
     if: github.event_name == 'release' || inputs.environment != 'none'
     runs-on: ubuntu-latest
     needs: [get_publish_info, get_package_info, build_package]
@@ -148,14 +154,14 @@ jobs:
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ needs.get_publish_info.outputs.package-name }}-distribution-packages
-        path: ${{ github.workspace }}/${{ needs.get_package_info.outputs.package-basepath }}/dist/
-    - run: ls -l
-      working-directory: ${{ github.workspace }}/${{ needs.get_package_info.outputs.package-basepath }}
+        path: dist/
+    - name: Display distribution packages
+      run: ls -lR dist/
     - name: Upload to ${{ env.environment }}
       uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
       with:
         repository-url: ${{ fromJson(env.environment-info)[env.environment].upload-url }}
-        packages-dir: ${{ github.workspace }}/${{ needs.get_package_info.outputs.package-basepath }}/dist
+        packages-dir: dist/
   update_version:
     name: Update ${{ needs.get_publish_info.outputs.package-name }} version
     if: ${{ github.event_name == 'release' }}
@@ -176,5 +182,5 @@ jobs:
       - name: Update project version
         uses: ni/python-actions/update-project-version@aa64e60612cb078b0c2ada666becbd70d4817d55 # v0.7.1
         with:
-          project-directory: ${{ github.workspace }}/${{ needs.get_package_info.outputs.package-basepath }}
+          project-directory: ${{ github.workspace }}
           branch-prefix: users/build/${{ needs.get_publish_info.outputs.package-name }}-
