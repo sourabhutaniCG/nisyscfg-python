@@ -142,7 +142,7 @@ jobs:
           path: dist/*
   publish_to_pypi:
     name: Publish ${{ needs.get_publish_info.outputs.package-name }}
-    if: github.event_name == 'release' || inputs.environment != 'none'
+    if: ${{ github.event_name == 'release' || inputs.package-name != 'none' }}
     runs-on: ubuntu-latest
     needs: [get_publish_info, get_package_info, build_package]
     environment:
@@ -166,7 +166,7 @@ jobs:
         packages-dir: dist/
   update_version:
     name: Update ${{ needs.get_publish_info.outputs.package-name }} version
-    if: ${{ github.event_name == 'release' }}
+    if: ${{ github.event_name == 'release' || inputs.package-name != 'none' }}
     runs-on: ubuntu-latest
     needs: [get_publish_info, get_package_info, build_package]
     permissions:
