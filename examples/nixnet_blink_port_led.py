@@ -1,13 +1,19 @@
+"""Example demonstrating how to blink an NI-XNET port LED."""
+
+import sys
+
 import nisyscfg
 import nisyscfg.xnet
-import sys
 
 
 class PortNotFoundError(Exception):
+    """Raised when the specified NI-XNET port cannot be found."""
+
     pass
 
 
 def nixnet_blink_port_led(port_name, mode):
+    """Enable or disable blinking for the specified NI-XNET port LED."""
     with nisyscfg.Session() as session:
         # Search for the NI-XNET interface with port name.
         interface_filter = session.create_filter()

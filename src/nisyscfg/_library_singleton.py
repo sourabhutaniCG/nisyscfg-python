@@ -6,7 +6,10 @@ from nisyscfg import _library, errors
 
 
 class CTypesLibrary(object):
+    """Wrap ctypes library instances used by NI System Configuration."""
+
     def __init__(self, cdll, windll=None):
+        """Initialize the ctypes library wrapper."""
         self._cdll = cdll
         self._windll = windll
         if self._windll is None:
@@ -14,10 +17,12 @@ class CTypesLibrary(object):
 
     @property
     def cdll(self):
+        """Return the loaded CDLL instance."""
         return self._cdll
 
     @property
     def windll(self):
+        """Return the loaded WinDLL instance."""
         return self._windll
 
 
@@ -47,6 +52,7 @@ def _get_library_type():
 
 
 def get():
+    """Return the singleton NI System Configuration library instance."""
     global _instance
 
     with _instance_lock:

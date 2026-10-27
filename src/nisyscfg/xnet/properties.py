@@ -1,3 +1,5 @@
+"""XNET-specific property definitions for NI System Configuration."""
+
 from nisyscfg.enums import Bool
 from nisyscfg.properties import (
     IntProperty,
@@ -22,6 +24,8 @@ from nisyscfg.xnet.enums import (
 
 
 class Resource(PropertyGroup):
+    """XNET resource property definitions."""
+
     # Read-only device properties
     NUMBER_OF_PORTS = UnsignedIntProperty(167780352)
     IP_STACK_INFO_JSON = StringProperty(167882752)
@@ -57,6 +61,8 @@ class Resource(PropertyGroup):
 
 
 class Filter(PropertyGroup):
+    """XNET filter property definitions."""
+
     # Write-only device properties
     NUMBER_OF_PORTS = UnsignedIntProperty(167780352)
 

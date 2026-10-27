@@ -1,3 +1,5 @@
+"""Software dependency information and enumeration helpers."""
+
 import ctypes
 import typing
 
@@ -16,17 +18,23 @@ DependencyInfo = typing.NamedTuple(
 
 
 class DependencyInfoIterator(object):
+    """Iterates over software dependency information."""
+
     def __init__(self, handle):
+        """Initialize the iterator with a dependency enumeration handle."""
         self._handle = handle
         self._library = nisyscfg._library_singleton.get()
 
     def __del__(self):
+        """Release resources associated with the iterator."""
         self.close()
 
     def __iter__(self):
+        """Return the iterator instance."""
         return self
 
     def __next__(self) -> DependencyInfo:
+        """Return the next dependency entry."""
         if not self._handle:
             raise StopIteration()
         depender_id = nisyscfg.types.simple_string()
@@ -90,6 +98,7 @@ class DependencyInfoIterator(object):
         )
 
     def close(self) -> None:
+        """Close the dependency enumeration handle."""
         if self._handle:
             error_code = self._library.CloseHandle(self._handle)
             nisyscfg.errors.handle_error(self, error_code)

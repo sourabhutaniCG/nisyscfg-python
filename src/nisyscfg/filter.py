@@ -1,3 +1,5 @@
+"""Hardware filter functionality for NI System Configuration."""
+
 import ctypes
 
 import nisyscfg.errors
@@ -9,7 +11,10 @@ from nisyscfg._lib import c_string_encode
 @nisyscfg.properties.PropertyBag(nisyscfg.properties.Filter)
 @nisyscfg.properties.PropertyBag(nisyscfg.xnet.properties.Filter, expert="xnet")
 class Filter(object):
+    """Represents a hardware resource filter."""
+
     def __init__(self, session):
+        """Initialize a hardware filter."""
         self._handle = nisyscfg.types.FilterHandle()
         self._library = nisyscfg._library_singleton.get()
         self._property_accessor = nisyscfg.properties.PropertyAccessor(
@@ -19,9 +24,11 @@ class Filter(object):
         nisyscfg.errors.handle_error(self, error_code)
 
     def __del__(self):
+        """Release the filter handle."""
         self.close()
 
     def close(self):
+        """Close the filter handle."""
         if self._handle:
             error_code = self._library.CloseHandle(self._handle)
             nisyscfg.errors.handle_error(self, error_code)

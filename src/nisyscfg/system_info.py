@@ -1,19 +1,27 @@
+"""System discovery and enumeration functionality for NI System Configuration."""
+
 import nisyscfg.errors
 from nisyscfg._lib import c_string_decode
 
 
 class SystemInfoIterator(object):
+    """Iterates over discovered systems."""
+
     def __init__(self, handle):
+        """Initialize the system information iterator."""
         self._handle = handle
         self._library = nisyscfg._library_singleton.get()
 
     def __del__(self):
+        """Release resources associated with the iterator."""
         self.close()
 
     def __iter__(self):
+        """Return the iterator instance."""
         return self
 
     def __next__(self) -> str:
+        """Return the next discovered system."""
         if not self._handle:
             raise StopIteration()
         system_name = nisyscfg.types.simple_string()
@@ -24,6 +32,7 @@ class SystemInfoIterator(object):
         return c_string_decode(system_name.value)
 
     def close(self) -> None:
+        """Close the system enumeration handle."""
         if self._handle:
             error_code = self._library.CloseHandle(self._handle)
             nisyscfg.errors.handle_error(self, error_code)

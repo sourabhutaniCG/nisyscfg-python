@@ -1,3 +1,5 @@
+"""Software feed enumeration functionality for NI System Configuration."""
+
 import ctypes
 import typing
 
@@ -16,17 +18,23 @@ SoftwareFeed = typing.NamedTuple(
 
 
 class SoftwareFeedIterator(object):
+    """Iterates over configured software feeds."""
+
     def __init__(self, handle):
+        """Initialize the software feed iterator."""
         self._handle = handle
         self._library = nisyscfg._library_singleton.get()
 
     def __del__(self):
+        """Release resources associated with the iterator."""
         self.close()
 
     def __iter__(self):
+        """Return the iterator instance."""
         return self
 
     def __next__(self) -> SoftwareFeed:
+        """Return the next software feed."""
         if not self._handle:
             raise StopIteration()
         name = nisyscfg.types.simple_string()
@@ -47,6 +55,7 @@ class SoftwareFeedIterator(object):
         )
 
     def close(self) -> None:
+        """Close the software feed enumeration handle."""
         if self._handle:
             error_code = self._library.CloseHandle(self._handle)
             nisyscfg.errors.handle_error(self, error_code)

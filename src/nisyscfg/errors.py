@@ -1,4 +1,5 @@
 # This file is code generated
+"""Exceptions, warnings, and status codes for NI System Configuration."""
 
 import platform
 import warnings
@@ -19,7 +20,10 @@ def _is_warning(code):
 
 
 class Error(Exception):
+    """Base exception for NI System Configuration errors."""
+
     def __init__(self, message):
+        """Initialize the exception."""
         super(Error, self).__init__(message)
 
 
@@ -28,7 +32,10 @@ class InvalidSystemImageError(Error):
 
 
 class LibraryError(Error):
+    """Raised when the NI System Configuration API returns an error."""
+
     def __init__(self, code, description):
+        """Initialize the library error."""
         assert _is_error(code), "Should not raise Error if code is not fatal."
         self.code = code
         self.description = description
@@ -40,7 +47,10 @@ class LibraryError(Error):
 
 
 class LibraryWarning(Warning):
+    """Represents a warning returned by the NI System Configuration API."""
+
     def __init__(self, code, description):
+        """Initialize the library warning."""
         assert _is_warning(code), "Should not create Warning if code is not positive."
         self.code = code
         self.description = description
@@ -52,14 +62,20 @@ class LibraryWarning(Warning):
 
 
 class UnsupportedPlatformError(Error):
+    """Raised when the current platform is not supported."""
+
     def __init__(self):
+        """Initialize the unsupported platform error."""
         super(UnsupportedPlatformError, self).__init__(
             "Platform is unsupported: " + platform.architecture()[0] + " " + platform.system()
         )
 
 
 class LibraryNotInstalledError(Error):
+    """Raised when the NI System Configuration runtime cannot be loaded."""
+
     def __init__(self):
+        """Initialize the library not installed error."""
         super(LibraryNotInstalledError, self).__init__(
             "The NI System Configuration runtime could not be loaded. Make sure"
             " it is installed and its bitness matches that of your Python"
@@ -69,6 +85,7 @@ class LibraryNotInstalledError(Error):
 
 
 def handle_error(session, code, ignore_warnings=False, is_error_handling=False):
+    """Convert NI System Configuration status codes into exceptions or warnings."""
     if _is_success(code) or (_is_warning(code) and ignore_warnings):
         return
 
@@ -96,6 +113,8 @@ warnings.filterwarnings("always", category=LibraryWarning)
 
 
 class Status(BaseEnum):
+    """NI System Configuration status and error codes."""
+
     OK = 0
     END_OF_ENUM = 1
     SELF_TEST_BASIC_ONLY = 263024

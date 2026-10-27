@@ -1,3 +1,5 @@
+"""Software component information and enumeration helpers."""
+
 import ctypes
 import typing
 
@@ -18,17 +20,23 @@ ComponentInfo = typing.NamedTuple(
 
 
 class ComponentInfoIterator(object):
+    """Iterates over software component information."""
+
     def __init__(self, handle):
+        """Initialize the iterator with a component enumeration handle."""
         self._handle = handle
         self._library = nisyscfg._library_singleton.get()
 
     def __del__(self):
+        """Release resources associated with the iterator."""
         self.close()
 
     def __iter__(self):
+        """Return the iterator instance."""
         return self
 
     def __next__(self) -> ComponentInfo:
+        """Return the next software component."""
         if not self._handle:
             raise StopIteration()
         id = nisyscfg.types.simple_string()
@@ -59,6 +67,7 @@ class ComponentInfoIterator(object):
         )
 
     def close(self) -> None:
+        """Close the component enumeration handle."""
         if self._handle:
             error_code = self._library.CloseHandle(self._handle)
             nisyscfg.errors.handle_error(self, error_code)
@@ -66,16 +75,21 @@ class ComponentInfoIterator(object):
 
 
 class EnumSoftwareComponent(object):
+    """Represents a software component enumeration."""
+
     def __init__(self):
+        """Create a new software component enumeration."""
         self._handle = nisyscfg.types.EnumSoftwareComponentHandle()
         self._library = nisyscfg._library_singleton.get()
         error_code = self._library.CreateComponentsEnum(ctypes.pointer(self._handle))
         nisyscfg.errors.handle_error(self, error_code)
 
     def __del__(self):
+        """Release resources associated with the enumeration."""
         self.close()
 
     def close(self) -> None:
+        """Close the software component enumeration."""
         if self._handle:
             error_code = self._library.CloseHandle(self._handle)
             nisyscfg.errors.handle_error(self, error_code)
@@ -87,8 +101,7 @@ class EnumSoftwareComponent(object):
         version: str = "",
         mode: nisyscfg.enums.VersionSelectionMode = nisyscfg.enums.VersionSelectionMode.HIGHEST,
     ) -> None:
-        """
-        Adds a software component
+        """Adds a software component.
 
         id - ID of the software component to be added to the enumeration.
 

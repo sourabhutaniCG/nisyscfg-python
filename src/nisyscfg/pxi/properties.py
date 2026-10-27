@@ -1,3 +1,5 @@
+"""PXI-specific property definitions for NI System Configuration."""
+
 from nisyscfg.properties import (
     BoolProperty,
     IndexedDoubleProperty,
@@ -22,6 +24,8 @@ from nisyscfg.pxi.enums import (
 
 
 class Resource(PropertyGroup):
+    """PXI resource property definitions."""
+
     # Chassis attributes
     PXI_CHASSIS_NUMBER = UnsignedIntProperty(184565760)
     CHASSIS_LED_BLINK_PATTERN = UnsignedIntProperty(184655872)
@@ -66,6 +70,8 @@ class Resource(PropertyGroup):
 
 
 class IndexedResource(PropertyGroup):
+    """PXI indexed resource property definitions."""
+
     # Power supply index attributes
     POWER_SUPPLY_NAME = IndexedStringProperty(186781696, Resource.POWER_SUPPLY_BAY_COUNT)
     POWER_SUPPLY_STATE = IndexedUnsignedIntProperty(

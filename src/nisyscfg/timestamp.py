@@ -1,3 +1,5 @@
+"""Timestamp conversion helpers for NI System Configuration."""
+
 import ctypes
 
 from hightime import datetime, timedelta
@@ -12,6 +14,7 @@ tai_epoch = datetime(year=1970, month=1, day=1)
 
 
 def is_blank_timestamp(timestamp):
+    """Return whether the timestamp contains only zero values."""
     return all(num == 0 for num in timestamp)
 
 

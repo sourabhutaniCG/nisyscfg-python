@@ -1,3 +1,5 @@
+"""Hardware resource access and management functionality."""
+
 import ctypes
 import typing
 from functools import reduce
@@ -50,19 +52,25 @@ DeleteResult = typing.NamedTuple(
 
 
 class HardwareResourceIterator(object):
+    """Iterates over hardware resources returned by a query."""
+
     def __init__(self, session, handle):
+        """Initialize the hardware resource iterator."""
         self._children = []
         self._session = session
         self._handle = handle
         self._library = nisyscfg._library_singleton.get()
 
     def __del__(self):
+        """Release resources associated with the iterator."""
         self.close()
 
     def __iter__(self):
+        """Return the iterator instance."""
         return self
 
     def __next__(self):
+        """Return the next hardware resource."""
         if not self._handle:
             # TODO(tkrebes): raise RuntimeError
             raise StopIteration()
@@ -78,6 +86,7 @@ class HardwareResourceIterator(object):
         return resource
 
     def close(self):
+        """Close the resource enumeration handle."""
         self._children.reverse()
         for child in self._children:
             child.close()
@@ -95,7 +104,10 @@ class HardwareResourceIterator(object):
 )
 @nisyscfg.properties.PropertyBag(nisyscfg.xnet.properties.Resource, expert="xnet")
 class HardwareResource(object):
+    """Represents a hardware resource managed by NI System Configuration."""
+
     def __init__(self, handle):
+        """Initialize the hardware resource wrapper."""
         self._handle = handle
         self._library = nisyscfg._library_singleton.get()
         self._property_accessor = nisyscfg.properties.PropertyAccessor(
@@ -105,16 +117,16 @@ class HardwareResource(object):
         )
 
     def __del__(self):
+        """Release the hardware resource handle."""
         self.close()
 
     def __repr__(self):
+        """Return a string representation of the hardware resource."""
         return "HardwareResource(name={})".format(self.name)
 
     @property
     def name(self):
-        """
-        Returns a name that identifies a resource
-        """
+        """Returns a name that identifies a resource."""
         name = self.expert_user_alias[0]
         # If the resource doesn't have an alias, use the resource name instead
         if not name:
@@ -122,8 +134,7 @@ class HardwareResource(object):
         return name
 
     def close(self):
-        """
-        Closes reference to previously allocated resource.
+        """Closes reference to previously allocated resource.
 
         Raises an nisyscfg.errors.LibraryError exception in the event of an
         error.
@@ -186,8 +197,7 @@ class HardwareResource(object):
         return c_string_decode(value.value)
 
     def get_property(self, name, default=_NoDefault()):
-        """
-        Returns value of hardware resource property
+        """Returns value of hardware resource property.
 
         Return the value for hardware resource property specified by the name,
         else default. If default is not given and the property does not exist,
@@ -218,8 +228,7 @@ class HardwareResource(object):
         nisyscfg.errors.handle_error(self, error_code)
 
     def rename(self, new_name, overwrite_conflict=False, update_dependencies=False):
-        """
-        Changes the display name of a resource.
+        """Changes the display name of a resource.
 
         new_name - The user-specified new name for the resource.
 
@@ -269,8 +278,7 @@ class HardwareResource(object):
         return overwritten_resource
 
     def reset(self, mode=0):
-        """
-        Executes a reset on a specified resource.
+        """Executes a reset on a specified resource.
 
         Raises an nisyscfg.errors.LibraryError exception in the event of an
         error.
@@ -279,8 +287,7 @@ class HardwareResource(object):
         nisyscfg.errors.handle_error(self, error_code)
 
     def save_changes(self) -> SaveChangesResult:
-        """
-        Writes and saves property changes on a device.
+        """Writes and saves property changes on a device.
 
         Returns tuple (restart_required, details)
 
@@ -307,8 +314,7 @@ class HardwareResource(object):
         return SaveChangesResult(restart_required=restart_required.value != 0, details=details)
 
     def self_calibrate(self):
-        """
-        Performs a self-calibration on a device.
+        """Performs a self-calibration on a device.
 
         Self-calibration adjusts the calibration constants with respect to an
         onboard reference stored on the device. The new calibration constants
@@ -337,8 +343,7 @@ class HardwareResource(object):
         return details
 
     def self_test(self, mode=0):
-        """
-        Verifies that system devices are able to perform basic I/O functions.
+        """Verifies that system devices are able to perform basic I/O functions.
 
         No other tasks should run on the system while executing the self test
         because the driver may need exclusive access to some device resources.
@@ -371,8 +376,7 @@ class HardwareResource(object):
         force: bool = False,
         sync_call: bool = True,
     ) -> UpgradeFirmwareResult:
-        """
-        Updates the firmware on the target.
+        """Updates the firmware on the target.
 
         version - Specifies the firmware version you want to apply to the
         target. Use '0' to install the latest available firmware.
@@ -457,8 +461,7 @@ class HardwareResource(object):
 
     @property
     def firmware_status(self) -> FirmwareStatusResult:
-        """
-        Returns the status of the firmware upgrade in progress.
+        """Returns the status of the firmware upgrade in progress.
 
         Returns tuple (percent_complete, status, details)
 
@@ -497,9 +500,7 @@ class HardwareResource(object):
         )
 
     def delete(self, mode=nisyscfg.enums.DeleteValidationMode.DELETE_IF_NO_DEPENDENCIES_EXIST):
-        """
-        Permanently removes a hardware resource and its configuration data from
-        the system.
+        """Permanently removes a hardware resource and its configuration data.
 
         Note: Not all devices can be deleted; consult your product documentation.
 
