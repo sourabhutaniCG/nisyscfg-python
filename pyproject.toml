@@ -62,6 +62,12 @@ application-import-names = "nisyscfg,tests"
 [tool.black]
 line-length = 100
 
+[tool.bandit]
+skips = [
+  "B101", # assert_used
+]
+
+
 [tool.mypy]
 files = "examples/,src/,tests/"
 namespace_packages = true
