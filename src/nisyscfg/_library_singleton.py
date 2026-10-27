@@ -2,8 +2,7 @@ import ctypes
 import platform
 import threading
 
-from nisyscfg import _library
-from nisyscfg import errors
+from nisyscfg import _library, errors
 
 
 class CTypesLibrary(object):

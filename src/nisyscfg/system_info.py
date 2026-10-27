@@ -1,5 +1,4 @@
 import nisyscfg.errors
-
 from nisyscfg._lib import c_string_decode
 
 

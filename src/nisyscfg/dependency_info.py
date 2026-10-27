@@ -1,9 +1,9 @@
 import ctypes
+import typing
+
 import nisyscfg.component_info
 import nisyscfg.enums
 import nisyscfg.errors
-import typing
-
 from nisyscfg._lib import c_string_decode
 
 DependencyInfo = typing.NamedTuple(

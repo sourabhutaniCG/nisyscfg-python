@@ -5,6 +5,7 @@ import pathlib
 import tempfile
 import zipfile
 from contextlib import ExitStack
+from typing import List, NamedTuple, Union
 
 import nisyscfg
 import nisyscfg._library_singleton
@@ -18,12 +19,7 @@ import nisyscfg.pxi.properties
 import nisyscfg.software_feed
 import nisyscfg.system_info
 import nisyscfg.xnet.properties
-
-from nisyscfg._lib import c_string_decode
-from nisyscfg._lib import c_string_encode
-
-from typing import List, NamedTuple, Union
-
+from nisyscfg._lib import c_string_decode, c_string_encode
 
 InstallAllResult = NamedTuple(
     "InstallAllResult",

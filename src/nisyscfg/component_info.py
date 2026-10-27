@@ -1,11 +1,9 @@
 import ctypes
-import nisyscfg.enums
-import nisyscfg.errors
 import typing
 
-from nisyscfg._lib import c_string_decode
-from nisyscfg._lib import c_string_encode
-
+import nisyscfg.enums
+import nisyscfg.errors
+from nisyscfg._lib import c_string_decode, c_string_encode
 
 ComponentInfo = typing.NamedTuple(
     "ComponentInfo",

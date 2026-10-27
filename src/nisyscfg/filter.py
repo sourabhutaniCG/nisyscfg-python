@@ -1,8 +1,8 @@
 import ctypes
+
 import nisyscfg.errors
 import nisyscfg.properties
 import nisyscfg.xnet.properties
-
 from nisyscfg._lib import c_string_encode
 
 

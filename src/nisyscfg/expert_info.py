@@ -1,8 +1,7 @@
-import nisyscfg.errors
 import typing
 
+import nisyscfg.errors
 from nisyscfg._lib import c_string_decode
-
 
 ExpertInfo = typing.NamedTuple(
     "ExpertInfo",

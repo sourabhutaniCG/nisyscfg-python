@@ -4,20 +4,20 @@ from nisyscfg.properties import (
     IndexedStringProperty,
     IndexedUnsignedIntProperty,
     IntProperty,
-    UnsignedIntProperty,
     PropertyGroup,
+    UnsignedIntProperty,
 )
 from nisyscfg.pxi.enums import (
+    CalExtActions,
     Clock10Sources,
-    ExternalClockOutputSources,
-    InternalOscillators,
-    PxiHighDensityTrigPortState,
-    FanModes,
     CoolingProfiles,
     CoolingProfileSource,
-    PowerSupplyStates,
+    ExternalClockOutputSources,
+    FanModes,
     InhibitModes,
-    CalExtActions,
+    InternalOscillators,
+    PowerSupplyStates,
+    PxiHighDensityTrigPortState,
 )
 
 

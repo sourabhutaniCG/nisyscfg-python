@@ -1,23 +1,23 @@
 from nisyscfg.enums import Bool
 from nisyscfg.properties import (
-    StringProperty,
-    UnsignedIntProperty,
     IntProperty,
     PropertyGroup,
+    StringProperty,
+    UnsignedIntProperty,
 )
 from nisyscfg.xnet.enums import (
-    EnetPortMode,
-    EnetPhyState,
     Blink,
-    Protocol,
     CanTransceiverCapability,
     DongleId,
     DongleState,
-    EnetLinkSpeed,
-    EnetJumboFrames,
     EnetInterruptModeration,
-    EnetSleepCapability,
+    EnetJumboFrames,
+    EnetLinkSpeed,
     EnetPhyPowerMode,
+    EnetPhyState,
+    EnetPortMode,
+    EnetSleepCapability,
+    Protocol,
 )
 
 

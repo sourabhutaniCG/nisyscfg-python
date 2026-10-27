@@ -1,15 +1,14 @@
 import ctypes
+import typing
 from functools import reduce
+
 import nisyscfg.errors
 import nisyscfg.properties
 import nisyscfg.pxi.properties
 import nisyscfg.timestamp
 import nisyscfg.types
 import nisyscfg.xnet.properties
-import typing
-
-from nisyscfg._lib import c_string_decode
-from nisyscfg._lib import c_string_encode
+from nisyscfg._lib import c_string_decode, c_string_encode
 
 
 class _NoDefault(object):

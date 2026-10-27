@@ -2,12 +2,13 @@ import ctypes
 import pathlib
 
 import hightime
+import pytest
+
 import nisyscfg as nisyscfg
 import nisyscfg.enums
 import nisyscfg.errors
 import nisyscfg.properties
 import nisyscfg.timestamp
-import pytest
 
 try:
     from unittest import mock
@@ -1146,7 +1147,9 @@ def test_session_set_system_image_with_file(lib_mock, tmp_path):
 
 
 def test_session_set_system_image_with_invalid_file(lib_mock, tmp_path):
-    system_image_path = pathlib.Path(__file__).parent.parent / "assets" / "mock_invalid_system_image.bin"
+    system_image_path = (
+        pathlib.Path(__file__).parent.parent / "assets" / "mock_invalid_system_image.bin"
+    )
 
     with mock.patch("tempfile.TemporaryDirectory") as mock_tempdir:
         mock_tempdir.return_value.__enter__.return_value = tmp_path

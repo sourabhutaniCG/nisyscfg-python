@@ -1,4 +1,7 @@
 import ctypes
+from typing import List, Union
+
+import nisyscfg.timestamp
 from nisyscfg.enums import (
     AccessType,
     AdapterMode,
@@ -21,9 +24,6 @@ from nisyscfg.enums import (
     ServiceType,
     SwitchState,
 )
-import nisyscfg.timestamp
-
-from typing import List, Union
 
 
 class PropertyAccessor(object):

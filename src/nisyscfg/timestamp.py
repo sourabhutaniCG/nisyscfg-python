@@ -1,12 +1,11 @@
-from hightime import datetime
-from hightime import timedelta
+import ctypes
+
+from hightime import datetime, timedelta
+
 import nisyscfg
 import nisyscfg._library_singleton
 import nisyscfg.errors
 import nisyscfg.types
-
-import ctypes
-
 
 # International Atomic Time epoch
 tai_epoch = datetime(year=1970, month=1, day=1)
