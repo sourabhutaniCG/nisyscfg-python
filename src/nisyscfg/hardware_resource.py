@@ -3,6 +3,7 @@
 import ctypes
 import typing
 from functools import reduce
+from typing import Any, Callable
 
 import nisyscfg.errors
 import nisyscfg.properties
@@ -11,6 +12,10 @@ import nisyscfg.timestamp
 import nisyscfg.types
 import nisyscfg.xnet.properties
 from nisyscfg._lib import c_string_decode, c_string_encode
+
+# Typed local aliases for untyped C interop helpers so mypy sees their signatures.
+_c_string_decode: Callable[[Any], str] = c_string_decode
+_c_string_encode: Callable[[str], Any] = c_string_encode
 
 
 class _NoDefault(object):
@@ -54,22 +59,30 @@ DeleteResult = typing.NamedTuple(
 class HardwareResourceIterator(object):
     """Iterates over hardware resources returned by a query."""
 
-    def __init__(self, session, handle):
+    def __init__(
+        self,
+        session: "nisyscfg.types.SessionHandle",
+        handle: typing.Optional["nisyscfg.types.EnumResourceHandle"],
+    ) -> None:
         """Initialize the hardware resource iterator."""
-        self._children = []
-        self._session = session
-        self._handle = handle
-        self._library = nisyscfg._library_singleton.get()
+        self._children: list["HardwareResource"] = []
+        self._session: "nisyscfg.types.SessionHandle" = session
+        # Handle may be cleared by close(); make it Optional for typing.
+        self._handle: typing.Optional["nisyscfg.types.EnumResourceHandle"] = handle
+        from typing import Any
 
-    def __del__(self):
+        # The library singleton is dynamically typed; treat it as Any locally.
+        self._library: Any = nisyscfg._library_singleton.get()  # type: ignore[no-untyped-call]
+
+    def __del__(self) -> None:
         """Release resources associated with the iterator."""
         self.close()
 
-    def __iter__(self):
+    def __iter__(self) -> "HardwareResourceIterator":
         """Return the iterator instance."""
         return self
 
-    def __next__(self):
+    def __next__(self) -> "HardwareResource":
         """Return the next hardware resource."""
         if not self._handle:
             # TODO(tkrebes): raise RuntimeError
@@ -77,7 +90,7 @@ class HardwareResourceIterator(object):
         resource_handle = nisyscfg.types.ResourceHandle()
         error_code = self._library.NextResource(
             self._session, self._handle, ctypes.pointer(resource_handle)
-        )
+        )  # type: ignore[no-untyped-call]
         if error_code == nisyscfg.errors.Status.END_OF_ENUM:
             raise StopIteration()
         nisyscfg.errors.handle_error(self, error_code)
@@ -85,13 +98,13 @@ class HardwareResourceIterator(object):
         self._children.append(resource)
         return resource
 
-    def close(self):
+    def close(self) -> None:
         """Close the resource enumeration handle."""
         self._children.reverse()
         for child in self._children:
             child.close()
         if self._handle:
-            error_code = self._library.CloseHandle(self._handle)
+            error_code = self._library.CloseHandle(self._handle)  # type: ignore[no-untyped-call]
             nisyscfg.errors.handle_error(self, error_code)
             self._handle = None
 
@@ -106,26 +119,35 @@ class HardwareResourceIterator(object):
 class HardwareResource(object):
     """Represents a hardware resource managed by NI System Configuration."""
 
-    def __init__(self, handle):
+    def __init__(self, handle: "nisyscfg.types.ResourceHandle") -> None:
         """Initialize the hardware resource wrapper."""
-        self._handle = handle
-        self._library = nisyscfg._library_singleton.get()
-        self._property_accessor = nisyscfg.properties.PropertyAccessor(
-            setter=self._set_property,
-            getter=self._get_property,
-            indexed_getter=self._get_indexed_property,
+        self._handle: "nisyscfg.types.ResourceHandle" = handle
+        from typing import Any
+
+        # The library singleton is dynamically typed; treat it as Any locally.
+        self._library: Any = nisyscfg._library_singleton.get()
+        # PropertyAccessor is dynamically typed; cast to the expected type to avoid mypy complaining about untyped-call.
+        from typing import cast
+
+        self._property_accessor = cast(
+            "nisyscfg.properties.PropertyAccessor",
+            nisyscfg.properties.PropertyAccessor(
+                setter=self._set_property,
+                getter=self._get_property,
+                indexed_getter=self._get_indexed_property,
+            ),
         )
 
     def __del__(self):
         """Release the hardware resource handle."""
         self.close()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the hardware resource."""
         return "HardwareResource(name={})".format(self.name)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Returns a name that identifies a resource."""
         name = self.expert_user_alias[0]
         # If the resource doesn't have an alias, use the resource name instead
@@ -133,7 +155,7 @@ class HardwareResource(object):
             name = self.expert_resource_name[0]
         return name
 
-    def close(self):
+    def close(self) -> None:
         """Closes reference to previously allocated resource.
 
         Raises an nisyscfg.errors.LibraryError exception in the event of an
@@ -144,7 +166,10 @@ class HardwareResource(object):
             nisyscfg.errors.handle_error(self, error_code)
             self._handle = None
 
-    def _get_property(self, id, c_type):
+    def _get_property(self, id: int, c_type: type) -> typing.Any:
+        # value/value_arg are C-interop temporaries; use Any to avoid narrow mypy inference across branches.
+        value: typing.Any
+        value_arg: typing.Any
         if c_type == ctypes.c_char_p:
             value = nisyscfg.types.simple_string()
             value_arg = value
@@ -157,7 +182,7 @@ class HardwareResource(object):
             value = c_type(0)
             value_arg = ctypes.pointer(value)
 
-        error_code = self._library.GetResourceProperty(self._handle, id, value_arg)
+        error_code = self._library.GetResourceProperty(self._handle, id, value_arg)  # type: ignore[no-untyped-call]
         nisyscfg.errors.handle_error(self, error_code)
 
         if issubclass(c_type, nisyscfg.enums.BaseEnum) or issubclass(
@@ -168,9 +193,9 @@ class HardwareResource(object):
         if c_type == nisyscfg.types.TimestampUTC:
             return nisyscfg.timestamp._convert_ctype_to_datetime(value)
 
-        return c_string_decode(value.value)
+        return _c_string_decode(value.value)
 
-    def _get_indexed_property(self, id, index, c_type):
+    def _get_indexed_property(self, id: int, index: int, c_type: type) -> typing.Any:
         if c_type == ctypes.c_char_p:
             value = nisyscfg.types.simple_string()
             value_arg = value
@@ -194,9 +219,9 @@ class HardwareResource(object):
         if c_type == nisyscfg.types.TimestampUTC:
             return nisyscfg.timestamp._convert_ctype_to_datetime(value)
 
-        return c_string_decode(value.value)
+        return _c_string_decode(value.value)
 
-    def get_property(self, name, default=_NoDefault()):
+    def get_property(self, name: str, default: typing.Any = _NoDefault()) -> typing.Any:
         """Returns value of hardware resource property.
 
         Return the value for hardware resource property specified by the name,
@@ -212,7 +237,7 @@ class HardwareResource(object):
                 raise
             return default
 
-    def _set_property(self, id, value, c_type, nisyscfg_type):
+    def _set_property(self, id: int, value: typing.Any, c_type: type, nisyscfg_type: int) -> None:
         if c_type == ctypes.c_char_p:
             value = c_string_encode(value)
         elif issubclass(c_type, nisyscfg.enums.BaseEnum) or issubclass(
@@ -227,7 +252,9 @@ class HardwareResource(object):
         error_code = self._library.SetResourceProperty(self._handle, id, value)
         nisyscfg.errors.handle_error(self, error_code)
 
-    def rename(self, new_name, overwrite_conflict=False, update_dependencies=False):
+    def rename(
+        self, new_name: str, overwrite_conflict: bool = False, update_dependencies: bool = False
+    ) -> typing.Optional["HardwareResource"]:
         """Changes the display name of a resource.
 
         new_name - The user-specified new name for the resource.
@@ -277,7 +304,7 @@ class HardwareResource(object):
         # to 'overwritten_syscfg_resource == None'.
         return overwritten_resource
 
-    def reset(self, mode=0):
+    def reset(self, mode: int = 0) -> None:
         """Executes a reset on a specified resource.
 
         Raises an nisyscfg.errors.LibraryError exception in the event of an
@@ -313,7 +340,7 @@ class HardwareResource(object):
 
         return SaveChangesResult(restart_required=restart_required.value != 0, details=details)
 
-    def self_calibrate(self):
+    def self_calibrate(self) -> str:
         """Performs a self-calibration on a device.
 
         Self-calibration adjusts the calibration constants with respect to an
@@ -342,7 +369,7 @@ class HardwareResource(object):
 
         return details
 
-    def self_test(self, mode=0):
+    def self_test(self, mode: int = 0) -> str:
         """Verifies that system devices are able to perform basic I/O functions.
 
         No other tasks should run on the system while executing the self test
@@ -370,8 +397,8 @@ class HardwareResource(object):
 
     def upgrade_firmware(
         self,
-        version: str = None,
-        filepath: str = None,
+        version: typing.Optional[str] = None,
+        filepath: typing.Optional[str] = None,
         auto_stop_task: bool = True,
         force: bool = False,
         sync_call: bool = True,
@@ -488,8 +515,8 @@ class HardwareResource(object):
             self._handle, percent_complete, firmware_status, ctypes.pointer(c_details)
         )
         if c_details:
-            details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
-            error_code_2 = self._library.FreeDetailedString(c_details)
+            details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)  # type: ignore[no-untyped-call]
+            error_code_2 = self._library.FreeDetailedString(c_details)  # type: ignore[no-untyped-call]
         nisyscfg.errors.handle_error(self, error_code)
         nisyscfg.errors.handle_error(self, error_code_2)
 
@@ -499,7 +526,10 @@ class HardwareResource(object):
             details=details,
         )
 
-    def delete(self, mode=nisyscfg.enums.DeleteValidationMode.DELETE_IF_NO_DEPENDENCIES_EXIST):
+    def delete(
+        self,
+        mode: "nisyscfg.enums.DeleteValidationMode" = nisyscfg.enums.DeleteValidationMode.DELETE_IF_NO_DEPENDENCIES_EXIST,
+    ) -> DeleteResult:
         """Permanently removes a hardware resource and its configuration data.
 
         Note: Not all devices can be deleted; consult your product documentation.
@@ -540,8 +570,8 @@ class HardwareResource(object):
             self._handle, mode, dependent_items_deleted, ctypes.pointer(c_details)
         )
         if c_details:
-            details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
-            error_code_2 = self._library.FreeDetailedString(c_details)
+            details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)  # type: ignore[no-untyped-call]
+            error_code_2 = self._library.FreeDetailedString(c_details)  # type: ignore[no-untyped-call]
         nisyscfg.errors.handle_error(self, error_code)
         nisyscfg.errors.handle_error(self, error_code_2)
 

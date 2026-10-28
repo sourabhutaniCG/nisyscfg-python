@@ -1,7 +1,7 @@
 """Property definitions and access helpers for NI System Configuration."""
 
 import ctypes
-from typing import List, Union
+from typing import Any, Callable, Iterator, List, Optional, Union, cast
 
 import nisyscfg.timestamp
 from nisyscfg.enums import (
@@ -33,83 +33,106 @@ class PropertyAccessor(object):
 
     __slots__ = "_getter", "_setter", "_indexed_getter"
 
-    def __init__(self, setter=None, getter=None, indexed_getter=None):
+    def __init__(
+        self,
+        setter: Optional[Callable[[int, Any, type, int], None]] = None,
+        getter: Optional[Callable[[int, type], Any]] = None,
+        indexed_getter: Optional[Callable[[int, int, type], Any]] = None,
+    ) -> None:
         """Initialize property access callbacks."""
         self._setter = setter
         self._getter = getter
         self._indexed_getter = indexed_getter
 
-    def set_bool_property(self, id, value):
+    def set_bool_property(self, id: int, value: Any) -> None:
         """Set a Boolean property."""
-        self._setter(id, value, Bool, PropertyType.BOOL)
+        cast(Callable[[int, Any, type, int], None], self._setter)(
+            id, value, Bool, PropertyType.BOOL
+        )
 
-    def set_int_property(self, id, value):
+    def set_int_property(self, id: int, value: Any) -> None:
         """Set an integer property."""
-        self._setter(id, value, ctypes.c_int, PropertyType.INT)
+        cast(Callable[[int, Any, type, int], None], self._setter)(
+            id, value, ctypes.c_int, PropertyType.INT
+        )
 
-    def set_unsigned_int_property(self, id, value):
+    def set_unsigned_int_property(self, id: int, value: Any) -> None:
         """Set an unsigned integer property."""
-        self._setter(id, value, ctypes.c_uint, PropertyType.UNSIGNED_INT)
+        cast(Callable[[int, Any, type, int], None], self._setter)(
+            id, value, ctypes.c_uint, PropertyType.UNSIGNED_INT
+        )
 
-    def set_double_property(self, id, value):
+    def set_double_property(self, id: int, value: float) -> None:
         """Set a floating-point property."""
-        self._setter(id, value, ctypes.c_double, PropertyType.DOUBLE)
+        cast(Callable[[int, Any, type, int], None], self._setter)(
+            id, value, ctypes.c_double, PropertyType.DOUBLE
+        )
 
-    def set_string_property(self, id, value):
+    def set_string_property(self, id: int, value: str) -> None:
         """Set a string property."""
-        self._setter(id, value, ctypes.c_char_p, PropertyType.STRING)
+        cast(Callable[[int, Any, type, int], None], self._setter)(
+            id, value, ctypes.c_char_p, PropertyType.STRING
+        )
 
-    def set_timestamp_property(self, id, value):
+    def set_timestamp_property(self, id: int, value: Any) -> None:
         """Set a timestamp property."""
-        self._setter(id, value, nisyscfg.types.TimestampUTC, PropertyType.TIMESTAMP)
+        cast(Callable[[int, Any, type, int], None], self._setter)(
+            id, value, nisyscfg.types.TimestampUTC, PropertyType.TIMESTAMP
+        )
 
-    def get_bool_property(self, id):
+    def get_bool_property(self, id: int) -> Any:
         """Get a Boolean property."""
-        return self._getter(id, Bool)
+        return cast(Callable[[int, type], Any], self._getter)(id, Bool)
 
-    def get_int_property(self, id):
+    def get_int_property(self, id: int) -> Any:
         """Get an integer property."""
-        return self._getter(id, ctypes.c_int)
+        return cast(Callable[[int, type], Any], self._getter)(id, ctypes.c_int)
 
-    def get_unsigned_int_property(self, id):
+    def get_unsigned_int_property(self, id: int) -> Any:
         """Get an unsigned integer property."""
-        return self._getter(id, ctypes.c_uint)
+        return cast(Callable[[int, type], Any], self._getter)(id, ctypes.c_uint)
 
-    def get_double_property(self, id):
+    def get_double_property(self, id: int) -> float:
         """Get a floating-point property."""
-        return self._getter(id, ctypes.c_double)
+        return cast(Callable[[int, type], float], self._getter)(id, ctypes.c_double)
 
-    def get_string_property(self, id):
+    def get_string_property(self, id: int) -> str:
         """Get a string property."""
-        return self._getter(id, ctypes.c_char_p)
+        return cast(Callable[[int, type], str], self._getter)(id, ctypes.c_char_p)
 
-    def get_timestamp_property(self, id):
+    def get_timestamp_property(self, id: int) -> Any:
         """Get a timestamp property."""
-        return self._getter(id, nisyscfg.types.TimestampUTC)
+        return cast(Callable[[int, type], Any], self._getter)(id, nisyscfg.types.TimestampUTC)
 
-    def get_indexed_bool_property(self, id, index):
+    def get_indexed_bool_property(self, id: int, index: int) -> Any:
         """Get a Boolean property at a specific index."""
-        return self._indexed_getter(id, index, Bool)
+        return cast(Callable[[int, int, type], Any], self._indexed_getter)(id, index, Bool)
 
-    def get_indexed_int_property(self, id, index):
+    def get_indexed_int_property(self, id: int, index: int) -> Any:
         """Get an integer property at a specific index."""
-        return self._indexed_getter(id, index, ctypes.c_int)
+        return cast(Callable[[int, int, type], Any], self._indexed_getter)(id, index, ctypes.c_int)
 
-    def get_indexed_unsigned_int_property(self, id, index):
+    def get_indexed_unsigned_int_property(self, id: int, index: int) -> Any:
         """Get an unsigned integer property at a specific index."""
-        return self._indexed_getter(id, index, ctypes.c_uint)
+        return cast(Callable[[int, int, type], Any], self._indexed_getter)(id, index, ctypes.c_uint)
 
-    def get_indexed_double_property(self, id, index):
+    def get_indexed_double_property(self, id: int, index: int) -> float:
         """Get a floating-point property at a specific index."""
-        return self._indexed_getter(id, index, ctypes.c_double)
+        return cast(Callable[[int, int, type], float], self._indexed_getter)(
+            id, index, ctypes.c_double
+        )
 
-    def get_indexed_string_property(self, id, index):
+    def get_indexed_string_property(self, id: int, index: int) -> str:
         """Get a string property at a specific index."""
-        return self._indexed_getter(id, index, ctypes.c_char_p)
+        return cast(Callable[[int, int, type], str], self._indexed_getter)(
+            id, index, ctypes.c_char_p
+        )
 
-    def get_indexed_timestamp_property(self, id, index):
+    def get_indexed_timestamp_property(self, id: int, index: int) -> Any:
         """Get a timestamp property at a specific index."""
-        return self._indexed_getter(id, index, nisyscfg.types.TimestampUTC)
+        return cast(Callable[[int, int, type], Any], self._indexed_getter)(
+            id, index, nisyscfg.types.TimestampUTC
+        )
 
 
 class TypeProperty(object):
@@ -117,12 +140,23 @@ class TypeProperty(object):
 
     __slots__ = "_id", "_enum", "_readable", "_writeable"
 
-    def __init__(self, id, enum=None, *, readable: bool = True, writeable: bool = True):
+    def __init__(
+        self, id: int, enum: Optional[Any] = None, *, readable: bool = True, writeable: bool = True
+    ) -> None:
         """Initialize a typed property definition."""
-        self._id = id
-        self._enum = enum
-        self._readable = readable
-        self._writeable = writeable
+        self._id: int = id
+        self._enum: Optional[Any] = enum
+        self._readable: bool = readable
+        self._writeable: bool = writeable
+
+    # Provide a typed base API so static checkers know subclasses implement these.
+    def get(self, accessor: PropertyAccessor) -> Any:  # pragma: no cover - abstract surface
+        raise NotImplementedError
+
+    def set(
+        self, accessor: PropertyAccessor, value: Any
+    ) -> None:  # pragma: no cover - abstract surface
+        raise NotImplementedError
 
 
 class BoolProperty(TypeProperty):
@@ -130,14 +164,14 @@ class BoolProperty(TypeProperty):
 
     __slots__ = ()
 
-    def get(self, accessor: PropertyAccessor):
+    def get(self, accessor: PropertyAccessor) -> Any:
         """Get the property value."""
         value = accessor.get_bool_property(self._id)
         if self._enum:
             return self._enum(value)
         return value
 
-    def set(self, accessor: PropertyAccessor, value):
+    def set(self, accessor: PropertyAccessor, value: Any) -> None:
         """Set the property value."""
         accessor.set_bool_property(self._id, value)
 
@@ -147,14 +181,14 @@ class IntProperty(TypeProperty):
 
     __slots__ = ()
 
-    def get(self, accessor: PropertyAccessor):
+    def get(self, accessor: PropertyAccessor) -> Any:
         """Get the property value."""
         value = accessor.get_int_property(self._id)
         if self._enum:
             return self._enum(value)
         return value
 
-    def set(self, accessor: PropertyAccessor, value):
+    def set(self, accessor: PropertyAccessor, value: Any) -> None:
         """Set the property value."""
         accessor.set_int_property(self._id, value)
 
@@ -164,14 +198,14 @@ class UnsignedIntProperty(TypeProperty):
 
     __slots__ = ()
 
-    def get(self, accessor: PropertyAccessor):
+    def get(self, accessor: PropertyAccessor) -> Any:
         """Get the property value."""
         value = accessor.get_unsigned_int_property(self._id)
         if self._enum:
             return self._enum(value)
         return value
 
-    def set(self, accessor: PropertyAccessor, value):
+    def set(self, accessor: PropertyAccessor, value: Any) -> None:
         """Set the property value."""
         accessor.set_unsigned_int_property(self._id, value)
 
@@ -185,7 +219,7 @@ class DoubleProperty(TypeProperty):
         """Get the property value."""
         return accessor.get_double_property(self._id)
 
-    def set(self, accessor: PropertyAccessor, value: float):
+    def set(self, accessor: PropertyAccessor, value: float) -> None:
         """Set the property value."""
         accessor.set_double_property(self._id, value)
 
@@ -199,7 +233,7 @@ class StringProperty(TypeProperty):
         """Get the property value."""
         return accessor.get_string_property(self._id)
 
-    def set(self, accessor: PropertyAccessor, value: str):
+    def set(self, accessor: PropertyAccessor, value: str) -> None:
         """Set the property value."""
         accessor.set_string_property(self._id, value)
 
@@ -209,11 +243,11 @@ class TimestampProperty(TypeProperty):
 
     __slots__ = ()
 
-    def get(self, accessor: PropertyAccessor):
+    def get(self, accessor: PropertyAccessor) -> Any:
         """Get the property value."""
         return accessor.get_timestamp_property(self._id)
 
-    def set(self, accessor: PropertyAccessor, value):
+    def set(self, accessor: PropertyAccessor, value: Any) -> None:
         """Set the property value."""
         accessor.set_timestamp_property(self._id, value)
 
@@ -221,12 +255,12 @@ class TimestampProperty(TypeProperty):
 class IndexedPropertyItems(object):
     """Collection of indexed property values."""
 
-    def __init__(self, accessor: PropertyAccessor, tag):
+    def __init__(self, accessor: PropertyAccessor, tag: Any) -> None:
         """Initialize indexed property access."""
         self._accessor = accessor
         self._tag = tag
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Any:
         """Return an indexed property value."""
         try:
             index + 1
@@ -242,11 +276,11 @@ class IndexedPropertyItems(object):
                 raise IndexError(index)
             raise
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the number of indexed values."""
         if not hasattr(self, "_len"):
             try:
-                self._len = self._tag.count_property.get(self._accessor)
+                self._len = cast(int, self._tag.count_property.get(self._accessor))
 
             # Not all NI System API experts implement the count property. So
             # if it does not exist, explicitly count each index.
@@ -255,18 +289,21 @@ class IndexedPropertyItems(object):
                     self._len = sum(1 for _ in self)
         return self._len
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         """Return an iterator over indexed values."""
 
         class IndexedPropertyItemsIter(object):
             __slots__ = "_properties", "_index"
 
-            def __init__(self, properties):
+            def __init__(self, properties: "IndexedPropertyItems") -> None:
                 """Initialize the iterator."""
                 self._properties = properties
                 self._index = -1
 
-            def __next__(self):
+            def __iter__(self) -> "IndexedPropertyItemsIter":
+                return self
+
+            def __next__(self) -> Any:
                 """Return the next indexed value."""
                 self._index += 1
                 try:
@@ -274,7 +311,7 @@ class IndexedPropertyItems(object):
                 except IndexError:
                     raise StopIteration()
 
-            def next(self):
+            def next(self) -> Any:
                 """Return the next indexed value."""
                 return self.__next__()
 
@@ -287,21 +324,27 @@ class IndexedProperty(TypeProperty):
     __slots__ = ("_count_property",)
 
     def __init__(
-        self, id, count_property, enum=None, *, readable: bool = True, writeable: bool = True
-    ):
+        self,
+        id: int,
+        count_property: TypeProperty,
+        enum: Optional[Any] = None,
+        *,
+        readable: bool = True,
+        writeable: bool = True,
+    ) -> None:
         """Initialize an indexed property definition."""
-        self._id = id
-        self._count_property = count_property
-        self._enum = enum
-        self._readable = readable
-        self._writeable = writeable
+        self._id: int = id
+        self._count_property: TypeProperty = count_property
+        self._enum: Optional[Any] = enum
+        self._readable: bool = readable
+        self._writeable: bool = writeable
 
     @property
-    def count_property(self):
+    def count_property(self) -> TypeProperty:
         """Return the associated count property."""
         return self._count_property
 
-    def get(self, accessor: PropertyAccessor):
+    def get(self, accessor: PropertyAccessor) -> IndexedPropertyItems:
         """Return a collection of indexed property values."""
         return IndexedPropertyItems(accessor, self)
 
@@ -311,7 +354,7 @@ class IndexedBoolProperty(IndexedProperty):
 
     __slots__ = ()
 
-    def get_index(self, accessor: PropertyAccessor, index: int):
+    def get_index(self, accessor: PropertyAccessor, index: int) -> Any:
         """Return a value by index."""
         value = accessor.get_indexed_bool_property(self._id, index)
         if self._enum:
@@ -324,7 +367,7 @@ class IndexedIntProperty(IndexedProperty):
 
     __slots__ = ()
 
-    def get_index(self, accessor: PropertyAccessor, index: int):
+    def get_index(self, accessor: PropertyAccessor, index: int) -> Any:
         """Return a value by index."""
         value = accessor.get_indexed_int_property(self._id, index)
         if self._enum:
@@ -337,7 +380,7 @@ class IndexedUnsignedIntProperty(IndexedProperty):
 
     __slots__ = ()
 
-    def get_index(self, accessor: PropertyAccessor, index: int):
+    def get_index(self, accessor: PropertyAccessor, index: int) -> Any:
         """Return a value by index."""
         value = accessor.get_indexed_unsigned_int_property(self._id, index)
         if self._enum:
@@ -350,7 +393,7 @@ class IndexedDoubleProperty(IndexedProperty):
 
     __slots__ = ()
 
-    def get_index(self, accessor: PropertyAccessor, index: int):
+    def get_index(self, accessor: PropertyAccessor, index: int) -> float:
         """Return a value by index."""
         return accessor.get_indexed_double_property(self._id, index)
 
@@ -360,7 +403,7 @@ class IndexedStringProperty(IndexedProperty):
 
     __slots__ = ()
 
-    def get_index(self, accessor: PropertyAccessor, index: int):
+    def get_index(self, accessor: PropertyAccessor, index: int) -> str:
         """Return a value by index."""
         return accessor.get_indexed_string_property(self._id, index)
 
@@ -370,7 +413,7 @@ class IndexedTimestampProperty(IndexedProperty):
 
     __slots__ = ()
 
-    def get_index(self, accessor: PropertyAccessor, index: int):
+    def get_index(self, accessor: PropertyAccessor, index: int) -> Any:
         """Return a value by index."""
         return accessor.get_indexed_timestamp_property(self._id, index)
 
@@ -630,19 +673,19 @@ class Property(object):
 
     __slots__ = ("_type_property",)
 
-    def __init__(self, type_property: TypeProperty):
+    def __init__(self, type_property: TypeProperty) -> None:
         """Initialize the property descriptor."""
         self._type_property = type_property
 
-    def __get__(self, instance, cls):
+    def __get__(self, instance: Any, cls: Any) -> Any:
         """Return the property value."""
         return self._type_property.get(instance._property_accessor)
 
-    def __set__(self, instance, value):
+    def __set__(self, instance: Any, value: Any) -> None:
         """Set the property value."""
         return self._type_property.set(instance._property_accessor, value)
 
-    def __delete__(self, instance):
+    def __delete__(self, instance: Any) -> None:
         """Prevent property deletion."""
         raise NotImplementedError
 
@@ -650,24 +693,24 @@ class Property(object):
 class Expert(object):
     """Descriptor providing access to expert-specific properties."""
 
-    def __init__(self, *property_groups: List[PropertyGroup]):
+    def __init__(self, *property_groups: List[PropertyGroup]) -> None:
         """Initialize expert property definitions."""
 
         class _ExpertPropertyBag(object):
-            def __init__(self, property_bag):
+            def __init__(self, property_bag: PropertyAccessor) -> None:
                 self._property_accessor = property_bag
 
         self._expert = PropertyBag(*property_groups)(_ExpertPropertyBag)
 
-    def __get__(self, instance, cls):
+    def __get__(self, instance: Any, cls: Any) -> Any:
         """Return the expert property accessor."""
         return self._expert(instance._property_accessor)
 
-    def __set__(self, instance, value):
+    def __set__(self, instance: Any, value: Any) -> None:
         """Prevent replacing the expert descriptor."""
         raise NotImplementedError
 
-    def __delete__(self, instance):
+    def __delete__(self, instance: Any) -> None:
         """Prevent deleting the expert descriptor."""
         raise NotImplementedError
 
@@ -680,7 +723,7 @@ class PropertyBag(object):
         self._property_groups = property_groups
         self._expert = expert
 
-    def __call__(self, session):
+    def __call__(self, session: Any) -> Any:
         """Attach configured properties to a session object."""
         if self._expert:
             setattr(session, self._expert, Expert(*self._property_groups))

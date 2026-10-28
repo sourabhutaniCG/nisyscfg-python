@@ -2,13 +2,14 @@
 """Enumeration definitions used by NI System Configuration."""
 
 from enum import IntEnum, IntFlag
+from typing import SupportsInt
 
 
 class BaseEnum(IntEnum):
     """Base class for NI System Configuration enumerations."""
 
     @classmethod
-    def from_param(cls, obj):
+    def from_param(cls: type["BaseEnum"], obj: SupportsInt | str) -> int:
         """Convert an enum value for use with ctypes."""
         return int(obj)
 
@@ -17,7 +18,7 @@ class BaseFlag(IntFlag):
     """Base class for NI System Configuration flag enumerations."""
 
     @classmethod
-    def from_param(cls, obj):
+    def from_param(cls: type["BaseFlag"], obj: SupportsInt | str) -> int:
         """Convert a flag value for use with ctypes."""
         return int(obj)
 

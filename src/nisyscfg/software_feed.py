@@ -2,9 +2,16 @@
 
 import ctypes
 import typing
+from typing import Any, Callable, Optional, cast
 
+import nisyscfg._library_singleton
 import nisyscfg.errors
 from nisyscfg._lib import c_string_decode
+
+# Provide typed wrappers for untyped callables so mypy's "no-untyped-call"
+# rule is satisfied while preserving runtime behavior.
+_c_string_decode: Callable[[Any], str] = cast(Callable[[Any], str], c_string_decode)
+_get_library: Callable[[], Any] = nisyscfg._library_singleton.get
 
 SoftwareFeed = typing.NamedTuple(
     "SoftwareFeed",
@@ -20,16 +27,18 @@ SoftwareFeed = typing.NamedTuple(
 class SoftwareFeedIterator(object):
     """Iterates over configured software feeds."""
 
-    def __init__(self, handle):
+    def __init__(self, handle: Optional[Any]) -> None:
         """Initialize the software feed iterator."""
-        self._handle = handle
-        self._library = nisyscfg._library_singleton.get()
+        self._handle: Optional[Any] = handle
+        # _library is untyped at runtime; keep the type as Any to avoid
+        # leaking implementation details while satisfying type checking.
+        self._library: Any = _get_library()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Release resources associated with the iterator."""
         self.close()
 
-    def __iter__(self):
+    def __iter__(self) -> "SoftwareFeedIterator":
         """Return the iterator instance."""
         return self
 
@@ -48,8 +57,8 @@ class SoftwareFeedIterator(object):
             raise StopIteration()
         nisyscfg.errors.handle_error(self, error_code)
         return SoftwareFeed(
-            name=c_string_decode(name.value),
-            uri=c_string_decode(uri.value),
+            name=_c_string_decode(name.value),
+            uri=_c_string_decode(uri.value),
             enabled=enabled.value != 0,
             trusted=trusted.value != 0,
         )

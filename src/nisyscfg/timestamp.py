@@ -1,6 +1,7 @@
 """Timestamp conversion helpers for NI System Configuration."""
 
 import ctypes
+from typing import TYPE_CHECKING, Iterable
 
 from hightime import datetime, timedelta
 
@@ -12,13 +13,17 @@ import nisyscfg.types
 # International Atomic Time epoch
 tai_epoch = datetime(year=1970, month=1, day=1)
 
+if TYPE_CHECKING:
+    # Import the C types only for type checking so mypy treats them as valid types.
+    from nisyscfg.types import TimestampUTC as _TimestampUTCType
 
-def is_blank_timestamp(timestamp):
+
+def is_blank_timestamp(timestamp: Iterable[int]) -> bool:
     """Return whether the timestamp contains only zero values."""
     return all(num == 0 for num in timestamp)
 
 
-def _convert_ctype_to_datetime(timestamp: nisyscfg.types.TimestampUTC) -> datetime:
+def _convert_ctype_to_datetime(timestamp: Iterable[int]) -> datetime:
     # This method returns 1 Jan 1904 if blank datetime is found(zero timestamp value).
     # Else it converts the timestamp to datetime and returns
     if is_blank_timestamp(timestamp):
@@ -42,7 +47,7 @@ def _convert_ctype_to_datetime(timestamp: nisyscfg.types.TimestampUTC) -> dateti
         )
 
 
-def _convert_datetime_to_ctype(timestamp: datetime) -> nisyscfg.types.TimestampUTC:
+def _convert_datetime_to_ctype(timestamp: datetime) -> "_TimestampUTCType":
     if timestamp == datetime(year=1904, month=1, day=1):
         return nisyscfg.types.TimestampUTC(0, 0, 0, 0)
     else:
@@ -55,13 +60,13 @@ def _convert_datetime_to_ctype(timestamp: datetime) -> nisyscfg.types.TimestampU
             + (time_since_tai_epoch.femtoseconds / 10**15)
             + (time_since_tai_epoch.yoctoseconds / 10**24)
         )
-        timestamp = nisyscfg.types.TimestampUTC()
+        timestamp_ctype = nisyscfg.types.TimestampUTC()
 
         error_code = library.TimestampFromValues(
             seconds_since_tai_epoch,
             fractional_seconds,
-            ctypes.pointer(timestamp),
+            ctypes.pointer(timestamp_ctype),
         )
         nisyscfg.errors.handle_error(None, error_code, is_error_handling=True)
 
-        return timestamp
+        return timestamp_ctype

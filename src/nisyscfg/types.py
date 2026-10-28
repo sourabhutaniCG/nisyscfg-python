@@ -2,6 +2,7 @@
 """Generated ctypes aliases and handle types for NI System Configuration."""
 
 import ctypes
+from typing import TypeAlias
 
 simple_string = ctypes.c_char * 1024
 
@@ -10,7 +11,7 @@ ResourceHandle = ctypes.c_void_p
 EnumResourceHandle = ctypes.c_void_p
 EnumSoftwareFeedHandle = ctypes.c_void_p
 SessionHandle = ctypes.c_void_p
-TimestampUTC = ctypes.c_uint * 4
+TimestampUTC: TypeAlias = ctypes.c_uint * 4
 EnumSoftwareComponentHandle = ctypes.c_void_p
 EnumDependencyHandle = ctypes.c_void_p
 SoftwareSetHandle = ctypes.c_void_p

@@ -3,26 +3,27 @@
 
 import platform
 import warnings
+from typing import Any, Union
 
 from nisyscfg.enums import BaseEnum
 
 
-def _is_success(code):
+def _is_success(code: Union[int, BaseEnum]) -> bool:
     return code == 0
 
 
-def _is_error(code):
+def _is_error(code: Union[int, BaseEnum]) -> bool:
     return code < 0
 
 
-def _is_warning(code):
+def _is_warning(code: Union[int, BaseEnum]) -> bool:
     return code > 0
 
 
 class Error(Exception):
     """Base exception for NI System Configuration errors."""
 
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         """Initialize the exception."""
         super(Error, self).__init__(message)
 
@@ -34,11 +35,11 @@ class InvalidSystemImageError(Error):
 class LibraryError(Error):
     """Raised when the NI System Configuration API returns an error."""
 
-    def __init__(self, code, description):
+    def __init__(self, code: Union[int, BaseEnum], description: str) -> None:
         """Initialize the library error."""
         assert _is_error(code), "Should not raise Error if code is not fatal."
-        self.code = code
-        self.description = description
+        self.code: Union[int, BaseEnum] = code
+        self.description: str = description
         if self.description:
             message = str(self.code) + ": " + self.description
         else:
@@ -49,11 +50,11 @@ class LibraryError(Error):
 class LibraryWarning(Warning):
     """Represents a warning returned by the NI System Configuration API."""
 
-    def __init__(self, code, description):
+    def __init__(self, code: Union[int, BaseEnum], description: str) -> None:
         """Initialize the library warning."""
         assert _is_warning(code), "Should not create Warning if code is not positive."
-        self.code = code
-        self.description = description
+        self.code: Union[int, BaseEnum] = code
+        self.description: str = description
         if self.description:
             message = "Warning {0}: {1}".format(str(self.code), self.description)
         else:
@@ -64,7 +65,7 @@ class LibraryWarning(Warning):
 class UnsupportedPlatformError(Error):
     """Raised when the current platform is not supported."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the unsupported platform error."""
         super(UnsupportedPlatformError, self).__init__(
             "Platform is unsupported: " + platform.architecture()[0] + " " + platform.system()
@@ -74,7 +75,7 @@ class UnsupportedPlatformError(Error):
 class LibraryNotInstalledError(Error):
     """Raised when the NI System Configuration runtime cannot be loaded."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the library not installed error."""
         super(LibraryNotInstalledError, self).__init__(
             "The NI System Configuration runtime could not be loaded. Make sure"
@@ -84,18 +85,23 @@ class LibraryNotInstalledError(Error):
         )
 
 
-def handle_error(session, code, ignore_warnings=False, is_error_handling=False):
+def handle_error(
+    session: Any,
+    code: Union[int, BaseEnum],
+    ignore_warnings: bool = False,
+    is_error_handling: bool = False,
+) -> None:
     """Convert NI System Configuration status codes into exceptions or warnings."""
     if _is_success(code) or (_is_warning(code) and ignore_warnings):
         return
 
     try:
-        status = Status(code)
+        status: Union[int, BaseEnum] = Status(code)
         # Only lookup descriptions for nisyscfg status codes
         if is_error_handling:
             # The caller is in the midst of error handling and an error occurred.
             # Don't try to get the description or we'll start recursing until the stack overflows.
-            description = ""
+            description: str = ""
         else:
             description = session._get_status_description(code)
     except Exception:

@@ -1,6 +1,7 @@
 """Expert discovery and enumeration functionality for NI System Configuration."""
 
 import typing
+from typing import Any, Callable, Optional, cast
 
 import nisyscfg.errors
 from nisyscfg._lib import c_string_decode
@@ -14,20 +15,27 @@ ExpertInfo = typing.NamedTuple(
     ],
 )
 
+# Provide typed wrappers for untyped callables so mypy's "no-untyped-call"
+# rule is satisfied while preserving runtime behavior.
+_c_string_decode: Callable[[Any], str] = c_string_decode
+_get_library: Callable[[], Any] = nisyscfg._library_singleton.get
+
 
 class ExpertInfoIterator(object):
     """Iterates over expert information returned by the system."""
 
-    def __init__(self, handle):
+    def __init__(self, handle: Optional[Any]) -> None:
         """Initialize the expert info iterator."""
-        self._handle = handle
-        self._library = nisyscfg._library_singleton.get()
+        self._handle: Optional[Any] = handle
+        # _library is untyped at runtime; we keep the type as Any to avoid
+        # leaking implementation details while satisfying type checking.
+        self._library: Any = _get_library()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Release resources associated with the iterator."""
         self.close()
 
-    def __iter__(self):
+    def __iter__(self) -> "ExpertInfoIterator":
         """Return the iterator instance."""
         return self
 
@@ -44,9 +52,9 @@ class ExpertInfoIterator(object):
             raise StopIteration()
         nisyscfg.errors.handle_error(self, error_code)
         return ExpertInfo(
-            c_string_decode(expert_name.value),
-            c_string_decode(display_name.value),
-            c_string_decode(version.value),
+            _c_string_decode(expert_name.value),
+            _c_string_decode(display_name.value),
+            _c_string_decode(version.value),
         )
 
     def close(self) -> None:

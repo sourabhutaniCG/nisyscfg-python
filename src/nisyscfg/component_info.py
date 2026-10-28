@@ -2,10 +2,18 @@
 
 import ctypes
 import typing
+from typing import Any, Callable, Optional, cast
 
+import nisyscfg._library_singleton
 import nisyscfg.enums
 import nisyscfg.errors
 from nisyscfg._lib import c_string_decode, c_string_encode
+
+# Provide typed wrappers for untyped callables so mypy's "no-untyped-call"
+# rule is satisfied while preserving runtime behavior.
+_c_string_decode: Callable[[Any], str] = c_string_decode
+_c_string_encode: Callable[[str], Any] = c_string_encode
+_get_library: Callable[[], Any] = nisyscfg._library_singleton.get
 
 ComponentInfo = typing.NamedTuple(
     "ComponentInfo",
@@ -13,8 +21,8 @@ ComponentInfo = typing.NamedTuple(
         ("id", str),
         ("version", str),
         ("title", str),
-        ("type", str),
-        ("details", str),
+        ("type", nisyscfg.enums.ComponentType),
+        ("details", typing.Optional[str]),
     ],
 )
 
@@ -22,16 +30,18 @@ ComponentInfo = typing.NamedTuple(
 class ComponentInfoIterator(object):
     """Iterates over software component information."""
 
-    def __init__(self, handle):
+    def __init__(self, handle: Optional[Any]) -> None:
         """Initialize the iterator with a component enumeration handle."""
-        self._handle = handle
-        self._library = nisyscfg._library_singleton.get()
+        self._handle: Optional[Any] = handle
+        # _library is untyped at runtime; keep the type as Any to avoid
+        # leaking implementation details while satisfying type checking.
+        self._library: Any = _get_library()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Release resources associated with the iterator."""
         self.close()
 
-    def __iter__(self):
+    def __iter__(self) -> "ComponentInfoIterator":
         """Return the iterator instance."""
         return self
 
@@ -42,7 +52,7 @@ class ComponentInfoIterator(object):
         id = nisyscfg.types.simple_string()
         version = nisyscfg.types.simple_string()
         title = nisyscfg.types.simple_string()
-        item_type = nisyscfg.types.ctypes.c_int()
+        item_type = ctypes.c_int()
         c_details = ctypes.POINTER(ctypes.c_char)()
         error_code = self._library.NextComponentInfo(
             self._handle, id, version, title, ctypes.pointer(item_type), c_details
@@ -52,16 +62,16 @@ class ComponentInfoIterator(object):
         nisyscfg.errors.handle_error(self, error_code)
 
         if c_details:
-            details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
+            details = _c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
             error_code = self._library.FreeDetailedString(c_details)
             nisyscfg.errors.handle_error(self, error_code)
         else:
             details = None
 
         return ComponentInfo(
-            id=c_string_decode(id.value),
-            version=c_string_decode(version.value),
-            title=c_string_decode(title.value),
+            id=_c_string_decode(id.value),
+            version=_c_string_decode(version.value),
+            title=_c_string_decode(title.value),
             type=nisyscfg.enums.ComponentType(item_type.value),
             details=details,
         )
@@ -77,14 +87,20 @@ class ComponentInfoIterator(object):
 class EnumSoftwareComponent(object):
     """Represents a software component enumeration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a new software component enumeration."""
-        self._handle = nisyscfg.types.EnumSoftwareComponentHandle()
-        self._library = nisyscfg._library_singleton.get()
+        # EnumSoftwareComponentHandle is a ctypes.c_void_p alias; allow None
+        # to be stored when the handle is closed by typing as Optional.
+        self._handle: typing.Optional[ctypes.c_void_p] = (
+            nisyscfg.types.EnumSoftwareComponentHandle()
+        )
+        # _library is untyped at runtime; keep the type as Any to avoid
+        # leaking implementation details while satisfying type checking.
+        self._library: Any = _get_library()
         error_code = self._library.CreateComponentsEnum(ctypes.pointer(self._handle))
         nisyscfg.errors.handle_error(self, error_code)
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Release resources associated with the enumeration."""
         self.close()
 
@@ -115,6 +131,9 @@ class EnumSoftwareComponent(object):
         Raises an nisyscfg.errors.LibraryError exception in the event of an error.
         """
         error_code = self._library.AddComponentToEnum(
-            self._handle, c_string_encode(id), c_string_encode(version), mode
+            self._handle,
+            _c_string_encode(id),
+            _c_string_encode(version),
+            mode,
         )
         nisyscfg.errors.handle_error(self, error_code)
