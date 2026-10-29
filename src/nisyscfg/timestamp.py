@@ -1,7 +1,7 @@
 """Timestamp conversion helpers for NI System Configuration."""
 
 import ctypes
-from typing import TYPE_CHECKING, Iterable, cast
+from typing import TYPE_CHECKING, Iterable
 
 from hightime import datetime, timedelta
 

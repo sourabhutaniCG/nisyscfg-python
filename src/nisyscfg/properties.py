@@ -1,7 +1,7 @@
 """Property definitions and access helpers for NI System Configuration."""
 
 import ctypes
-from typing import Any, Callable, Iterator, List, Optional, Type, Union, cast
+from typing import Any, Callable, Iterator, Optional, Type, Union, cast
 
 import nisyscfg.timestamp
 from nisyscfg.enums import (
@@ -153,11 +153,13 @@ class TypeProperty(object):
 
     # Provide a typed base API so static checkers know subclasses implement these.
     def get(self, accessor: PropertyAccessor) -> Any:  # pragma: no cover - abstract surface
+        """Get a property value."""
         raise NotImplementedError
 
     def set(
         self, accessor: PropertyAccessor, value: Any
     ) -> None:  # pragma: no cover - abstract surface
+        """Set a property value."""
         raise NotImplementedError
 
 

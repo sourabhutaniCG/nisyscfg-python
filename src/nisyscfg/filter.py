@@ -1,7 +1,7 @@
 """Hardware filter functionality for NI System Configuration."""
 
 import ctypes
-from typing import TYPE_CHECKING, Any, Optional, Type, cast
+from typing import Any, Optional, Type, cast
 
 import nisyscfg.errors
 import nisyscfg.properties
@@ -15,6 +15,8 @@ _property_bag = cast(Any, nisyscfg.properties.PropertyBag)
 @_property_bag(cast(Any, nisyscfg.properties.Filter))
 @_property_bag(cast(Any, nisyscfg.xnet.properties.Filter), expert="xnet")
 class Filter(object):
+    """Represents a NI System Configuration filter."""
+
     _handle: Optional["nisyscfg.types.FilterHandle"]
 
     """Represents a hardware resource filter."""
@@ -31,7 +33,8 @@ class Filter(object):
             setter=self._set_property_with_type
         )
 
-        # ctypes.pointer expects a C compatible handle; mypy can't verify the dynamic ctypes types here.
+        # ctypes.pointer expects a C compatible handle.
+        # mypy can't verify the dynamic ctypes types here.
         error_code = self._library.CreateFilter(session, ctypes.pointer(self._handle))
         nisyscfg.errors.handle_error(self, error_code)
 

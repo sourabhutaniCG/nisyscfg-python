@@ -75,7 +75,8 @@ def get() -> Any:
                     )
             except OSError:
                 raise errors.LibraryNotInstalledError()
-            # _library.Library is generated without type annotations; treat as Any to avoid untyped-call errors
+            # _library.Library is generated without type annotations.
+            #  Treat as Any to avoid untyped-call errors.
             # Wrap the generated library instance with Any to keep runtime behavior
             # Use getattr to avoid mypy "attr-defined" on the generated module
             _instance = cast(Any, getattr(_library, "Library")(ctypes_library))

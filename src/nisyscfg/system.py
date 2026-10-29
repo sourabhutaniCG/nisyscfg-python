@@ -7,7 +7,7 @@ import pathlib
 import tempfile
 import zipfile
 from contextlib import ExitStack
-from typing import Any, List, NamedTuple, Union, cast, Optional
+from typing import Any, Callable, List, NamedTuple, Optional, Union, cast
 
 import nisyscfg
 import nisyscfg._library_singleton
@@ -119,23 +119,25 @@ class Session(object):
         nisyscfg.errors.handle_error(self, error_code)
         self.target_name = target
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Close the session when the object is destroyed."""
         self.close()
 
-    def __enter__(self):
+    def __enter__(self) -> "Session":
         """Return the session context manager instance."""
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type: Any, value: Any, traceback: Any) -> None:
         """Close the session when exiting a context manager."""
         self.close()
 
-    def _get_status_description(self, status):
+    def _get_status_description(self, status: Union[int, "nisyscfg.errors.Status"]) -> str:
         c_detailed_description = ctypes.POINTER(ctypes.c_char)()
         error_code = self._library.GetStatusDescription(
             self._session, status, ctypes.pointer(c_detailed_description)
         )
+        detailed_description = ""
+        error_code_2 = 0
         if c_detailed_description:
             detailed_description = c_string_decode(
                 ctypes.cast(c_detailed_description, ctypes.c_char_p).value
@@ -145,7 +147,7 @@ class Session(object):
         nisyscfg.errors.handle_error(self, error_code_2, is_error_handling=True)
         return detailed_description
 
-    def close(self):
+    def close(self) -> None:
         """Closes references to previously allocated session, filters, resources and enumerators.
 
         Raises an nisyscfg.errors.LibraryError exception in the event of an
@@ -153,7 +155,7 @@ class Session(object):
         """
         self._children.reverse()
         for child in self._children:
-            child.close()
+            cast(Any, child).close()
         if self._session:
             error_code = self._library.CloseHandle(self._session)
             nisyscfg.errors.handle_error(self, error_code)
@@ -216,16 +218,22 @@ class Session(object):
         if filter is None:
 
             class DummyFilter(object):
-                _handle = None
+                _handle: Optional["nisyscfg.types.FilterHandle"] = None
 
-            filter = DummyFilter()
+            # Use a local variable narrowed to the Filter type so subsequent
+            # attribute access (._handle) is well-typed. We cast the dummy to
+            # the Filter interface to preserve runtime behavior while satisfying
+            # the type checker.
+            flt = cast(nisyscfg.filter.Filter, DummyFilter())
+        else:
+            flt = filter
         resource_handle = nisyscfg.types.EnumResourceHandle()
         if isinstance(expert_names, list):
             expert_names = ",".join(expert_names)
         error_code = self._library.FindHardware(
             self._session,
             mode,
-            filter._handle,
+            flt._handle,
             c_string_encode(expert_names),
             ctypes.pointer(resource_handle),
         )
@@ -315,7 +323,9 @@ class Session(object):
         )
         nisyscfg.errors.handle_error(self, error_code)
 
-        return nisyscfg.system_info.SystemInfoIterator(system_handle)
+        # SystemInfoIterator expects Optional[int] for its handle.
+        # cast the ctypes handle to int/None
+        return nisyscfg.system_info.SystemInfoIterator(cast(Optional[int], system_handle))
 
     def create_filter(self) -> nisyscfg.filter.Filter:
         """Creates a hardware filter used to query for specific resources in a system.
@@ -409,10 +419,10 @@ class Session(object):
             ctypes.pointer(software_component_handle),
         )
         nisyscfg.errors.handle_error(self, error_code)
+        iter = nisyscfg.component_info.ComponentInfoIterator(software_component_handle)
         if software_component_handle:
-            iter = nisyscfg.component_info.ComponentInfoIterator(software_component_handle)
             self._children.append(iter)
-            return iter
+        return iter
 
     def format(
         self,
@@ -525,10 +535,10 @@ class Session(object):
             self._session, item_types, ctypes.pointer(software_component_handle)
         )
         nisyscfg.errors.handle_error(self, error_code)
+        iter = nisyscfg.component_info.ComponentInfoIterator(software_component_handle)
         if software_component_handle:
-            iter = nisyscfg.component_info.ComponentInfoIterator(software_component_handle)
             self._children.append(iter)
-            return iter
+        return iter
 
     def get_installed_software_components(
         self,
@@ -566,10 +576,10 @@ class Session(object):
             self._session, item_types, cached, ctypes.pointer(software_component_handle)
         )
         nisyscfg.errors.handle_error(self, error_code)
+        iter = nisyscfg.component_info.ComponentInfoIterator(software_component_handle)
         if software_component_handle:
-            iter = nisyscfg.component_info.ComponentInfoIterator(software_component_handle)
             self._children.append(iter)
-            return iter
+        return iter
 
     def add_software_feed(self, name: str, uri: str, enabled: bool, trusted: bool) -> None:
         """Adds a software feed to the system.
@@ -637,7 +647,7 @@ class Session(object):
         )
         nisyscfg.errors.handle_error(self, error_code)
 
-    def remove_software_feed(self, name: str):
+    def remove_software_feed(self, name: str) -> None:
         """Removes an existing software feed by name.
 
         Note: This requires Secure Shell Server (sshd) to be enabled on the
@@ -703,7 +713,7 @@ class Session(object):
 
         return result
 
-    def uninstall_all(self, auto_restart: bool = True):
+    def uninstall_all(self, auto_restart: bool = True) -> None:
         """Uninstalls all software from a specified system.
 
         auto_restart - Restarts the system before and/or after the operation as
@@ -972,10 +982,10 @@ class Session(object):
             self._session, ctypes.pointer(software_feed_handle)
         )
         nisyscfg.errors.handle_error(self, error_code)
+        iter = nisyscfg.software_feed.SoftwareFeedIterator(software_feed_handle)
         if software_feed_handle:
-            iter = nisyscfg.software_feed.SoftwareFeedIterator(software_feed_handle)
             self._children.append(iter)
-            return iter
+        return iter
 
     @property
     def resource(self) -> nisyscfg.hardware_resource.HardwareResource:
@@ -986,7 +996,12 @@ class Session(object):
             self._children.append(self._resource)
         return self._resource
 
-    def _get_property(self, id, c_type):
+    def _get_property(self, id: int, c_type: Any) -> Any:
+        # The C API uses different ctypes return locations based on type. Keep
+        # the implementation dynamically typed but expose a typed signature
+        # to satisfy mypy for callers.
+        value: Any
+        value_arg: Any
         if c_type == ctypes.c_char_p:
             value = nisyscfg.types.simple_string()
             value_arg = value
@@ -999,7 +1014,8 @@ class Session(object):
             value = c_type(0)
             value_arg = ctypes.pointer(value)
 
-        error_code = self._library.GetSystemProperty(self._session, id, value_arg)
+        # _library is untyped; cast to Any to allow calling into the C api.
+        error_code = cast(Any, self._library).GetSystemProperty(self._session, id, value_arg)
         nisyscfg.errors.handle_error(self, error_code)
 
         if issubclass(c_type, nisyscfg.enums.BaseEnum) or issubclass(
@@ -1010,9 +1026,11 @@ class Session(object):
         if issubclass(c_type, ctypes.c_void_p):
             return value
 
-        return c_string_decode(value.value)
+        # c_string_decode is untyped; provide a typed alias for mypy to accept the call.
+        c_string_decode_t = cast(Callable[[Any], str], c_string_decode)
+        return c_string_decode_t(value.value)
 
-    def _set_property(self, id, value, c_type, nisyscfg_type):
+    def _set_property(self, id: int, value: Any, c_type: Any, nisyscfg_type: int) -> None:
         if c_type == ctypes.c_char_p:
             value = c_string_encode(value)
         elif issubclass(c_type, nisyscfg.enums.BaseEnum) or issubclass(
@@ -1022,7 +1040,7 @@ class Session(object):
         else:
             value = c_type(value)
 
-        error_code = self._library.SetSystemProperty(self._session, id, value)
+        error_code = cast(Any, self._library).SetSystemProperty(self._session, id, value)
         nisyscfg.errors.handle_error(self, error_code)
 
     def save_changes(self) -> SaveChangesResult:

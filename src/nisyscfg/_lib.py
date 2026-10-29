@@ -2,10 +2,7 @@ from __future__ import absolute_import
 
 import locale
 import sys
-from typing import Union, Optional, Any
-
-import six  # type: ignore[import-untyped]
-
+from typing import Optional, Union
 
 if sys.platform.startswith("win"):
     # On Windows, nisyscfg uses the system code page for the decoding of C-strings

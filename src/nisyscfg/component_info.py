@@ -2,7 +2,7 @@
 
 import ctypes
 import typing
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional
 
 import nisyscfg._library_singleton
 import nisyscfg.enums

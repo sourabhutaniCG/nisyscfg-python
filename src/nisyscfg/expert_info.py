@@ -1,7 +1,7 @@
 """Expert discovery and enumeration functionality for NI System Configuration."""
 
 import typing
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional
 
 import nisyscfg.errors
 from nisyscfg._lib import c_string_decode
