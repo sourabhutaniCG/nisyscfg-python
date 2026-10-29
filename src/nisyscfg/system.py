@@ -7,7 +7,7 @@ import pathlib
 import tempfile
 import zipfile
 from contextlib import ExitStack
-from typing import List, NamedTuple, Union
+from typing import Any, List, NamedTuple, Union, cast, Optional
 
 import nisyscfg
 import nisyscfg._library_singleton
@@ -99,9 +99,9 @@ class Session(object):
         timeout: float = 300.0,
     ) -> None:
         """Initialize a system configuration session."""
-        self._children = []
-        self._session = nisyscfg.types.SessionHandle()
-        self._library = nisyscfg._library_singleton.get()
+        self._children: List[Any] = []
+        self._session: Any = nisyscfg.types.SessionHandle()
+        self._library = cast(Any, nisyscfg._library_singleton.get())
         self._property_accessor = nisyscfg.properties.PropertyAccessor(
             setter=self._set_property,
             getter=self._get_property,

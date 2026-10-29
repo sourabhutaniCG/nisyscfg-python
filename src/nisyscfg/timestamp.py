@@ -1,7 +1,7 @@
 """Timestamp conversion helpers for NI System Configuration."""
 
 import ctypes
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, cast
 
 from hightime import datetime, timedelta
 
@@ -10,12 +10,23 @@ import nisyscfg._library_singleton
 import nisyscfg.errors
 import nisyscfg.types
 
+# Type-only import for the C-style timestamp alias used by mypy
+if TYPE_CHECKING:
+    from typing import cast as _type_cast
+
+    from nisyscfg.types import _TimestampUTCType
+
+    def _cast_to_ts(v: object) -> "_TimestampUTCType":
+        return _type_cast(_TimestampUTCType, v)
+
+else:
+
+    def _cast_to_ts(v: object):
+        return v
+
+
 # International Atomic Time epoch
 tai_epoch = datetime(year=1970, month=1, day=1)
-
-if TYPE_CHECKING:
-    # Import the C types only for type checking so mypy treats them as valid types.
-    from nisyscfg.types import TimestampUTC as _TimestampUTCType
 
 
 def is_blank_timestamp(timestamp: Iterable[int]) -> bool:
@@ -49,7 +60,9 @@ def _convert_ctype_to_datetime(timestamp: Iterable[int]) -> datetime:
 
 def _convert_datetime_to_ctype(timestamp: datetime) -> "_TimestampUTCType":
     if timestamp == datetime(year=1904, month=1, day=1):
-        return nisyscfg.types.TimestampUTC(0, 0, 0, 0)
+        # Construct a ctypes array and return it. For static checking, wrap with
+        # _cast_to_ts which is a no-op at runtime and a typed cast when TYPE_CHECKING.
+        return _cast_to_ts(nisyscfg.types.TimestampUTC(0, 0, 0, 0))
     else:
         library = nisyscfg._library_singleton.get()
 
@@ -69,4 +82,4 @@ def _convert_datetime_to_ctype(timestamp: datetime) -> "_TimestampUTCType":
         )
         nisyscfg.errors.handle_error(None, error_code, is_error_handling=True)
 
-        return timestamp_ctype
+        return _cast_to_ts(timestamp_ctype)

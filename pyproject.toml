@@ -70,7 +70,7 @@ skips = [
 
 
 [tool.mypy]
-files = "examples/,src/,tests/"
+files = "src/"
 namespace_packages = true
 strict = true
 

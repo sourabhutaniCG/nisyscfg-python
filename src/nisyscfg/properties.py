@@ -1,7 +1,7 @@
 """Property definitions and access helpers for NI System Configuration."""
 
 import ctypes
-from typing import Any, Callable, Iterator, List, Optional, Union, cast
+from typing import Any, Callable, Iterator, List, Optional, Type, Union, cast
 
 import nisyscfg.timestamp
 from nisyscfg.enums import (
@@ -77,7 +77,7 @@ class PropertyAccessor(object):
     def set_timestamp_property(self, id: int, value: Any) -> None:
         """Set a timestamp property."""
         cast(Callable[[int, Any, type, int], None], self._setter)(
-            id, value, nisyscfg.types.TimestampUTC, PropertyType.TIMESTAMP
+            id, value, cast(type, nisyscfg.types.TimestampUTC), PropertyType.TIMESTAMP
         )
 
     def get_bool_property(self, id: int) -> Any:
@@ -102,7 +102,9 @@ class PropertyAccessor(object):
 
     def get_timestamp_property(self, id: int) -> Any:
         """Get a timestamp property."""
-        return cast(Callable[[int, type], Any], self._getter)(id, nisyscfg.types.TimestampUTC)
+        return cast(Callable[[int, type], Any], self._getter)(
+            id, cast(type, nisyscfg.types.TimestampUTC)
+        )
 
     def get_indexed_bool_property(self, id: int, index: int) -> Any:
         """Get a Boolean property at a specific index."""
@@ -693,7 +695,7 @@ class Property(object):
 class Expert(object):
     """Descriptor providing access to expert-specific properties."""
 
-    def __init__(self, *property_groups: List[PropertyGroup]) -> None:
+    def __init__(self, *property_groups: Type[PropertyGroup]) -> None:
         """Initialize expert property definitions."""
 
         class _ExpertPropertyBag(object):
@@ -718,7 +720,7 @@ class Expert(object):
 class PropertyBag(object):
     """Descriptor providing access to a group of properties."""
 
-    def __init__(self, *property_groups: List[PropertyGroup], expert: Union[None, str] = None):
+    def __init__(self, *property_groups: Type[PropertyGroup], expert: Union[None, str] = None):
         """Initialize a property bag."""
         self._property_groups = property_groups
         self._expert = expert

@@ -1,17 +1,19 @@
 """Hardware filter functionality for NI System Configuration."""
 
 import ctypes
-
-from typing import Any, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional, Type, cast
 
 import nisyscfg.errors
 import nisyscfg.properties
 import nisyscfg.xnet.properties
 from nisyscfg._lib import c_string_encode
+from nisyscfg.properties import PropertyAccessor
+
+_property_bag = cast(Any, nisyscfg.properties.PropertyBag)
 
 
-@nisyscfg.properties.PropertyBag(nisyscfg.properties.Filter)  # type: ignore[arg-type]
-@nisyscfg.properties.PropertyBag(nisyscfg.xnet.properties.Filter, expert="xnet")  # type: ignore[arg-type]
+@_property_bag(cast(Any, nisyscfg.properties.Filter))
+@_property_bag(cast(Any, nisyscfg.xnet.properties.Filter), expert="xnet")
 class Filter(object):
     _handle: Optional["nisyscfg.types.FilterHandle"]
 
@@ -21,15 +23,16 @@ class Filter(object):
         """Initialize a hardware filter."""
         self._handle = nisyscfg.types.FilterHandle()
         # The library singleton is dynamically typed; treat it as Any locally.
-        from typing import Any, cast
+        # The library singleton is dynamically typed; treat it as Any locally.
+        self._library: Any = nisyscfg._library_singleton.get()
 
-        self._library: Any = nisyscfg._library_singleton.get()  # type: ignore[no-untyped-call]
-        # PropertyAccessor has untyped parameters; ignore the untyped-call error here.
-        self._property_accessor: "nisyscfg.properties.PropertyAccessor" = (
-            nisyscfg.properties.PropertyAccessor(setter=self._set_property_with_type)  # type: ignore[no-untyped-call]
+        # PropertyAccessor is a typed class in nisyscfg.properties; construct it directly.
+        self._property_accessor: PropertyAccessor = PropertyAccessor(
+            setter=self._set_property_with_type
         )
+
         # ctypes.pointer expects a C compatible handle; mypy can't verify the dynamic ctypes types here.
-        error_code = self._library.CreateFilter(session, ctypes.pointer(self._handle))  # type: ignore[arg-type]
+        error_code = self._library.CreateFilter(session, ctypes.pointer(self._handle))
         nisyscfg.errors.handle_error(self, error_code)
 
     def __del__(self) -> None:
@@ -43,10 +46,12 @@ class Filter(object):
             nisyscfg.errors.handle_error(self, error_code)
             self._handle = None
 
-    def _set_property_with_type(self, id: int, value: Any, c_type: type, nisyscfg_type: int) -> None:
+    def _set_property_with_type(
+        self, id: int, value: Any, c_type: Type[Any], nisyscfg_type: int
+    ) -> None:
         if c_type == ctypes.c_char_p:
             # c_string_encode is untyped; ignore here.
-            value = c_string_encode(value)  # type: ignore[no-untyped-call]
+            value = c_string_encode(value)
         elif issubclass(c_type, nisyscfg.enums.BaseEnum) or issubclass(
             c_type, nisyscfg.enums.BaseFlag
         ):
@@ -55,5 +60,5 @@ class Filter(object):
             value = c_type(value)
 
         # The SetFilterPropertyWithType call is to a C library; mypy cannot type-check it.
-        error_code = self._library.SetFilterPropertyWithType(self._handle, id, nisyscfg_type, value)  # type: ignore[no-untyped-call]
+        error_code = self._library.SetFilterPropertyWithType(self._handle, id, nisyscfg_type, value)
         nisyscfg.errors.handle_error(self, error_code)
