@@ -11,6 +11,7 @@ import nisyscfg.pxi.properties
 import nisyscfg.timestamp
 import nisyscfg.types
 import nisyscfg.xnet.properties
+from nisyscfg import _library_singleton
 from nisyscfg._lib import c_string_decode, c_string_encode
 
 # Typed local aliases for untyped C interop helpers so mypy sees their signatures.
@@ -72,7 +73,7 @@ class HardwareResourceIterator(object):
         from typing import Any
 
         # The library singleton is dynamically typed; treat it as Any locally.
-        self._library: Any = typing.cast(Any, nisyscfg._library_singleton.get())
+        self._library: Any = typing.cast(Any, _library_singleton.get())
 
     def __del__(self) -> None:
         """Release resources associated with the iterator."""
@@ -125,7 +126,7 @@ class HardwareResource(object):
         from typing import Any
 
         # The library singleton is dynamically typed; treat it as Any locally.
-        self._library: Any = nisyscfg._library_singleton.get()
+        self._library: Any = typing.cast(Any, _library_singleton.get())
         # PropertyAccessor is dynamically typed.
         # Cast to the expected type to avoid mypy complaining about untyped-call.
         self._property_accessor: "nisyscfg.properties.PropertyAccessor" = (
@@ -354,6 +355,7 @@ class HardwareResource(object):
         """
         restart_required = ctypes.c_int()
         details: str = ""
+        error_code_2 = 0
         c_details = ctypes.POINTER(ctypes.c_char)()
         error_code = self._library.SaveResourceChanges(
             self._handle, restart_required, ctypes.pointer(c_details)
@@ -386,6 +388,7 @@ class HardwareResource(object):
         error.
         """
         details: str = ""
+        error_code_2 = 0
         c_details = ctypes.POINTER(ctypes.c_char)()
         error_code = self._library.SelfCalibrateHardware(self._handle, ctypes.pointer(c_details))
         if c_details:
@@ -413,6 +416,7 @@ class HardwareResource(object):
         error.
         """
         details: str = ""
+        error_code_2 = 0
         c_details = ctypes.POINTER(ctypes.c_char)()
         error_code = self._library.SelfTestHardware(self._handle, mode, ctypes.pointer(c_details))
         if c_details:
@@ -503,7 +507,8 @@ class HardwareResource(object):
             raise ValueError(
                 "upgrade_firmware() requires either version or filepath to be specified"
             )
-
+        details: str = ""
+        error_code_2 = 0
         if c_details:
             details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
             error_code_2 = self._library.FreeDetailedString(c_details)
@@ -542,6 +547,8 @@ class HardwareResource(object):
         error_code = self._library.CheckFirmwareStatus(
             self._handle, percent_complete, firmware_status, ctypes.pointer(c_details)
         )
+        details: str = ""
+        error_code_2 = 0
         if c_details:
             details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
             error_code_2 = self._library.FreeDetailedString(c_details)
@@ -597,6 +604,8 @@ class HardwareResource(object):
         error_code = self._library.DeleteResource(
             self._handle, mode, dependent_items_deleted, ctypes.pointer(c_details)
         )
+        details: str = ""
+        error_code_2 = 0
         if c_details:
             details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
             error_code_2 = self._library.FreeDetailedString(c_details)

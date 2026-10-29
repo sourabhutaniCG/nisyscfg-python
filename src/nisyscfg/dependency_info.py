@@ -7,6 +7,7 @@ from typing import Any, Callable, Optional, cast
 import nisyscfg.component_info
 import nisyscfg.enums
 import nisyscfg.errors
+from nisyscfg import _library_singleton
 from nisyscfg._lib import c_string_decode
 
 # Provide typed wrapper like component_info so mypy's no-untyped-call rule is satisfied
@@ -29,7 +30,7 @@ class DependencyInfoIterator(object):
         # Handle is a ctypes handle type at runtime; allow None when closed
         self._handle: Optional[Any] = handle
         # Keep library as Any to avoid leaking generated types to the public API
-        self._library: Any = nisyscfg._library_singleton.get()
+        self._library: Any = _library_singleton.get()
 
     def __del__(self) -> None:
         """Release resources associated with the iterator."""

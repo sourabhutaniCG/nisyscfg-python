@@ -3,6 +3,7 @@
 from typing import Any, Callable, Optional, cast
 
 import nisyscfg.errors
+from nisyscfg import _library_singleton
 from nisyscfg._lib import c_string_decode
 
 
@@ -14,7 +15,7 @@ class SystemInfoIterator(object):
         # The handle is typically an integer/opaque C handle; allow None for closed state.
         self._handle: Optional[int] = handle
         # Cast the getter to Any before calling so mypy allows the call to an untyped function.
-        self._library: Any = cast(Any, nisyscfg._library_singleton.get)()
+        self._library: Any = cast(Any, _library_singleton.get())()
 
     def __del__(self) -> None:
         """Release resources associated with the iterator."""

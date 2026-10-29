@@ -6,6 +6,7 @@ from typing import Any, Optional, Type, cast
 import nisyscfg.errors
 import nisyscfg.properties
 import nisyscfg.xnet.properties
+from nisyscfg import _library_singleton
 from nisyscfg._lib import c_string_encode
 from nisyscfg.properties import PropertyAccessor
 
@@ -26,7 +27,7 @@ class Filter(object):
         self._handle = nisyscfg.types.FilterHandle()
         # The library singleton is dynamically typed; treat it as Any locally.
         # The library singleton is dynamically typed; treat it as Any locally.
-        self._library: Any = nisyscfg._library_singleton.get()
+        self._library: Any = _library_singleton.get()
 
         # PropertyAccessor is a typed class in nisyscfg.properties; construct it directly.
         self._property_accessor: PropertyAccessor = PropertyAccessor(

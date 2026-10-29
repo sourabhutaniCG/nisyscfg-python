@@ -4,6 +4,7 @@ import typing
 from typing import Any, Callable, Optional
 
 import nisyscfg.errors
+from nisyscfg import _library_singleton
 from nisyscfg._lib import c_string_decode
 
 ExpertInfo = typing.NamedTuple(
@@ -18,7 +19,7 @@ ExpertInfo = typing.NamedTuple(
 # Provide typed wrappers for untyped callables so mypy's "no-untyped-call"
 # rule is satisfied while preserving runtime behavior.
 _c_string_decode: Callable[[Any], str] = c_string_decode
-_get_library: Callable[[], Any] = nisyscfg._library_singleton.get
+_get_library: Callable[[], Any] = _library_singleton.get
 
 
 class ExpertInfoIterator(object):

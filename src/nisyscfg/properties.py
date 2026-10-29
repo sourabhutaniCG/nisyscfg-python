@@ -267,7 +267,7 @@ class IndexedPropertyItems(object):
     def __getitem__(self, index: int) -> Any:
         """Return an indexed property value."""
         try:
-            index + 1
+            _ = index + 1
         except TypeError:
             raise TypeError(index)
         # The index is stored as a 12-bit number in the driver.

@@ -1062,6 +1062,8 @@ class Session(object):
         error_code = self._library.SaveSystemChanges(
             self._session, restart_required, ctypes.pointer(c_details)
         )
+        details: str = ""
+        error_code_2 = 0
         if c_details:
             details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
             error_code_2 = self._library.FreeDetailedString(c_details)
