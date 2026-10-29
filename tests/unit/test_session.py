@@ -2,12 +2,13 @@ import ctypes
 import pathlib
 
 import hightime
-import nisyscfg as nisyscfg
+import pytest
+
+import nisyscfg
 import nisyscfg.enums
 import nisyscfg.errors
 import nisyscfg.properties
 import nisyscfg.timestamp
-import pytest
 
 try:
     from unittest import mock
@@ -32,51 +33,74 @@ STATUS_DESCRIPTION_VOID_P = ctypes.cast(STATUS_DESCRIPTION, ctypes.c_void_p)
 
 
 class CVoidPMatcher(object):
+    """Helper class for comparing ctypes void pointers in tests."""
+
     def __init__(self, value):
+        """Initialize the matcher with an expected pointer value."""
         self.value = value
 
     def __eq__(self, other):
+        """Compare the pointer value."""
         return ctypes.cast(other, ctypes.c_void_p).value == self.value
 
     def __repr__(self):
+        """Return a string representation of the matcher."""
         return "c_void_p({})".format(self.value)
 
 
 class CIntPMatcher(object):
+    """Helper class for comparing ctypes integer pointers in tests."""
+
     def __init__(self, value):
+        """Initialize the matcher with an expected value."""
         self.value = value
 
     def __eq__(self, other):
+        """Compare the integer value."""
         return other.value == self.value
 
     def __repr__(self):
+        """Return a string representation of the matcher."""
         return "{}".format(ctypes.c_int(self.value))
 
 
 class CUIntPMatcher(object):
+    """Helper class for comparing ctypes unsigned integer pointers in tests."""
+
     def __init__(self, value):
+        """Initialize the matcher with an expected value."""
         self.value = value
 
     def __eq__(self, other):
+        """Compare the unsigned integer value."""
         return other.value == self.value
 
     def __repr__(self):
+        """Return a string representation of the matcher."""
         return "{}".format(ctypes.c_uint(self.value))
 
 
 class TimestampMatcher(object):
+    """Helper class for comparing timestamp structures in tests."""
+
     def __init__(self, value):
+        """Initialize the matcher with an expected timestamp."""
         self.value = value
 
     def __eq__(self, other):
+        """Compare timestamp values."""
         return other[:] == self.value[:]
 
     def __repr__(self):
+        """Return a string representation of the timestamp."""
         return "{:08X}-{:08X}-{:08X}-{:08X}".format(*self.value[:])
 
 
 class ExpertInfoSideEffect(object):
+    """Mock side effect for expert information retrieval."""
+
     def __init__(self, expert_name, display_name, version):
+        """Initialize mock expert information."""
         self.expert_name = expert_name
         self.display_name = display_name
         self.version = version
@@ -89,7 +113,10 @@ class ExpertInfoSideEffect(object):
 
 
 class NextResourceSideEffect(object):
+    """Mock side effect for resource enumeration."""
+
     def __init__(self, resource_handle):
+        """Initialize the mock resource handle."""
         self.resource_handle = resource_handle
 
     def __call__(self, session_handle, resource_enum_handle, resource_handle):
@@ -796,9 +823,9 @@ def test_get_hardware_resource_timestamp_property(
         property_value.contents[:] = timestamp[:]
         return nisyscfg.errors.Status.OK
 
-    def values_from_timestamp_side_effect(timestamp, secondsSinceEpoch1970, fractionalSeconds):
-        secondsSinceEpoch1970.contents.value = 0
-        fractionalSeconds.contents.value = 0.0
+    def values_from_timestamp_side_effect(timestamp, seconds_since_epoch_1970, fractional_seconds):
+        seconds_since_epoch_1970.contents.value = 0
+        fractional_seconds.contents.value = 0.0
         return nisyscfg.errors.Status.OK
 
     lib_mock.return_value.NISysCfgGetResourceProperty.side_effect = (
@@ -851,11 +878,14 @@ def test_get_hardware_resource_name(
     resource_name,
     expected_value,
 ):
-    with mock.patch.object(
-        nisyscfg.hardware_resource.HardwareResource, "expert_user_alias"
-    ) as expert_user_alias_mock, mock.patch.object(
-        nisyscfg.hardware_resource.HardwareResource, "expert_resource_name"
-    ) as expert_resource_name_mock:
+    with (
+        mock.patch.object(
+            nisyscfg.hardware_resource.HardwareResource, "expert_user_alias"
+        ) as expert_user_alias_mock,
+        mock.patch.object(
+            nisyscfg.hardware_resource.HardwareResource, "expert_resource_name"
+        ) as expert_resource_name_mock,
+    ):
         expert_user_alias_mock.__getitem__.return_value = user_alias
         expert_resource_name_mock.__getitem__.return_value = resource_name
 
@@ -1008,7 +1038,7 @@ def test_set_hardware_resource_timestamp_property(
 ):
     ctypes_timestamp = nisyscfg.types.TimestampUTC(100, 200, 300, 400)  # random values
 
-    def timestamp_from_values_side_effect(secondsSinceEpoch1970, fractionalSeconds, timestamp):
+    def timestamp_from_values_side_effect(seconds_since_epoch_1970, fractional_seconds, timestamp):
         timestamp.contents[:] = ctypes_timestamp
         return nisyscfg.errors.Status.OK
 
@@ -1146,7 +1176,9 @@ def test_session_set_system_image_with_file(lib_mock, tmp_path):
 
 
 def test_session_set_system_image_with_invalid_file(lib_mock, tmp_path):
-    system_image_path = pathlib.Path(__file__).parent.parent / "assets" / "mock_invalid_system_image.bin"
+    system_image_path = (
+        pathlib.Path(__file__).parent.parent / "assets" / "mock_invalid_system_image.bin"
+    )
 
     with mock.patch("tempfile.TemporaryDirectory") as mock_tempdir:
         mock_tempdir.return_value.__enter__.return_value = tmp_path
