@@ -66,7 +66,7 @@ def get() -> Any:
                 if library_type == "dual":
                     ctypes_library = CTypesLibrary(
                         ctypes.CDLL(_get_library_name(), ctypes.RTLD_GLOBAL),
-                        ctypes.WinDLL(_get_library_name()),
+                        cast(Any, getattr(ctypes, "WinDLL"))(_get_library_name()),
                     )
                 else:
                     assert library_type == "cdll"
