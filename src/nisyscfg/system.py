@@ -7,7 +7,7 @@ import pathlib
 import tempfile
 import zipfile
 from contextlib import ExitStack
-from typing import Any, List, NamedTuple, Optional, Union, cast
+from typing import Any, cast, List, NamedTuple, Optional, Union
 
 import nisyscfg
 import nisyscfg._library_singleton
@@ -35,7 +35,7 @@ SaveChangesResult = NamedTuple(
     "SaveChangesResult",
     [
         ("restart_required", bool),
-        ("details", Optional[str]),
+        ("details", str),
     ],
 )
 
@@ -131,25 +131,23 @@ class Session(object):
         """Close the session when exiting a context manager."""
         self.close()
 
-    def _get_status_description(
-        self, status: Union[int, "nisyscfg.errors.Status"]
-    ) -> Optional[str]:
+    def _get_status_description(self, status: Union[int, "nisyscfg.errors.Status"]) -> str:
+        detailed_description = ""
+        free_error_code: Optional[int] = None
         c_detailed_description = ctypes.POINTER(ctypes.c_char)()
         error_code = self._library.GetStatusDescription(
             self._session, status, ctypes.pointer(c_detailed_description)
         )
         if c_detailed_description:
-            detailed_description = c_string_decode(
-                ctypes.cast(c_detailed_description, ctypes.c_char_p).value
+            detailed_description = cast(
+                str,
+                c_string_decode(ctypes.cast(c_detailed_description, ctypes.c_char_p).value),
             )
-            error_code_2 = self._library.FreeDetailedString(c_detailed_description)
+            free_error_code = self._library.FreeDetailedString(c_detailed_description)
         nisyscfg.errors.handle_error(self, error_code, is_error_handling=True)
-        nisyscfg.errors.handle_error(
-            self,
-            error_code_2,  # pyright: ignore[reportPossiblyUnboundVariable]
-            is_error_handling=True,
-        )
-        return detailed_description  # pyright: ignore[reportPossiblyUnboundVariable]
+        if free_error_code is not None:
+            nisyscfg.errors.handle_error(self, free_error_code, is_error_handling=True)
+        return detailed_description
 
     def close(self) -> None:
         """Closes references to previously allocated session, filters, resources and enumerators.
@@ -1072,20 +1070,21 @@ class Session(object):
         error.
         """
         restart_required = ctypes.c_int()
+        details = ""
+        free_error_code: Optional[int] = None
         c_details = ctypes.POINTER(ctypes.c_char)()
         error_code = self._library.SaveSystemChanges(
             self._session, restart_required, ctypes.pointer(c_details)
         )
         if c_details:
-            details = c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value)
-            error_code_2 = self._library.FreeDetailedString(c_details)
+            details = cast(str, c_string_decode(ctypes.cast(c_details, ctypes.c_char_p).value))
+            free_error_code = self._library.FreeDetailedString(c_details)
         nisyscfg.errors.handle_error(self, error_code)
-        nisyscfg.errors.handle_error(
-            self, error_code_2  # pyright: ignore[reportPossiblyUnboundVariable]
-        )
+        if free_error_code is not None:
+            nisyscfg.errors.handle_error(self, free_error_code)
         return SaveChangesResult(
             restart_required=restart_required.value != 0,
-            details=details,  # pyright: ignore[reportPossiblyUnboundVariable]
+            details=details,
         )
 
     def set_system_image(
