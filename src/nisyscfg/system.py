@@ -7,7 +7,7 @@ import pathlib
 import tempfile
 import zipfile
 from contextlib import ExitStack
-from typing import Any, cast, List, NamedTuple, Optional, Union
+from typing import Any, List, NamedTuple, Optional, Union, cast
 
 import nisyscfg
 import nisyscfg._library_singleton
@@ -382,7 +382,7 @@ class Session(object):
             new_ip_address,
         )
         nisyscfg.errors.handle_error(self, error_code)
-        return cast(str, c_string_decode(new_ip_address.value))
+        return c_string_decode(new_ip_address.value)
 
     def get_filtered_base_system_images(
         self,
@@ -819,7 +819,7 @@ class Session(object):
             auto_restart,
             auto_select_dependencies,
             auto_select_recommends,
-            software_to_install._handle,
+            software_to_install._handle,  # pyright: ignore[reportPrivateUsage]
             len(c_components_to_uninstall),
             ctypes.cast(c_components_to_uninstall, ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
             ctypes.pointer(broken_dependency_handle),

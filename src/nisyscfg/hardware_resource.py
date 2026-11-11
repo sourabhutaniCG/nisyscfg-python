@@ -390,7 +390,9 @@ class HardwareResource(object):
             return c_type(value.value)
 
         if c_type == nisyscfg.types.TimestampUTC:
-            return nisyscfg.timestamp.convert_ctype_to_datetime(value)
+            return nisyscfg.timestamp._convert_ctype_to_datetime(  # pyright: ignore[reportPrivateUsage]
+                value
+            )
 
         return typing.cast(str, c_string_decode(value.value))
 
@@ -431,7 +433,9 @@ class HardwareResource(object):
             return c_type(enum_value.value)
 
         if c_type == nisyscfg.types.TimestampUTC:
-            return nisyscfg.timestamp.convert_ctype_to_datetime(value)
+            return nisyscfg.timestamp._convert_ctype_to_datetime(  # pyright: ignore[reportPrivateUsage]
+                value
+            )
 
         return typing.cast(str, c_string_decode(value.value))
 
@@ -459,7 +463,9 @@ class HardwareResource(object):
         ):
             value = ctypes.c_int(value)
         elif c_type == nisyscfg.types.TimestampUTC:
-            value = nisyscfg.timestamp.convert_datetime_to_ctype(value)
+            value = nisyscfg.timestamp._convert_datetime_to_ctype(  # pyright: ignore[reportPrivateUsage]
+                value
+            )
         else:
             ctor = typing.cast(typing.Callable[[typing.Any], typing.Any], c_type)
             value = ctor(value)
