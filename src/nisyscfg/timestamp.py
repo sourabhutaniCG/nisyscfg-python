@@ -14,7 +14,7 @@ import nisyscfg.types
 if TYPE_CHECKING:
     from typing import cast as _type_cast
 
-    from nisyscfg.types import _TimestampUTCType
+    from nisyscfg.types import _TimestampUTCType  # pyright: ignore[reportPrivateUsage]
 
     def _cast_to_ts(v: object) -> "_TimestampUTCType":
         return _type_cast(_TimestampUTCType, v)
@@ -34,7 +34,9 @@ def is_blank_timestamp(timestamp: Iterable[int]) -> bool:
     return all(num == 0 for num in timestamp)
 
 
-def _convert_ctype_to_datetime(timestamp: Iterable[int]) -> datetime:
+def _convert_ctype_to_datetime(  # pyright: ignore[reportUnusedFunction]
+    timestamp: Iterable[int],
+) -> datetime:
     # This method returns 1 Jan 1904 if blank datetime is found(zero timestamp value).
     # Else it converts the timestamp to datetime and returns
     if is_blank_timestamp(timestamp):
@@ -58,7 +60,9 @@ def _convert_ctype_to_datetime(timestamp: Iterable[int]) -> datetime:
         )
 
 
-def _convert_datetime_to_ctype(timestamp: datetime) -> "_TimestampUTCType":
+def _convert_datetime_to_ctype(  # pyright: ignore[reportUnusedFunction]
+    timestamp: datetime,
+) -> "_TimestampUTCType":
     if timestamp == datetime(year=1904, month=1, day=1):
         # Construct a ctypes array and return it. For static checking, wrap with
         # _cast_to_ts which is a no-op at runtime and a typed cast when TYPE_CHECKING.

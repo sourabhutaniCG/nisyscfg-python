@@ -17,10 +17,8 @@ import nisyscfg.expert_info
 import nisyscfg.filter
 import nisyscfg.hardware_resource
 import nisyscfg.properties
-import nisyscfg.pxi.properties
 import nisyscfg.software_feed
 import nisyscfg.system_info
-import nisyscfg.xnet.properties
 from nisyscfg._lib import c_string_decode, c_string_encode
 
 InstallAllResult = NamedTuple(
@@ -159,7 +157,7 @@ class Session(object):
         """
         self._children.reverse()
         for child in self._children:
-            cast(Any, child).close()
+            child.close()
         if self._session:
             error_code = self._library.CloseHandle(self._session)
             nisyscfg.errors.handle_error(self, error_code)
@@ -239,7 +237,7 @@ class Session(object):
         error_code = self._library.FindHardware(
             self._session,
             mode,
-            flt._handle,
+            flt._handle,  # pyright: ignore[reportPrivateUsage]
             c_string_encode(expert_names),
             ctypes.pointer(resource_handle),
         )
@@ -385,7 +383,7 @@ class Session(object):
             new_ip_address,
         )
         nisyscfg.errors.handle_error(self, error_code)
-        return c_string_decode(new_ip_address.value)
+        return c_string_decode(new_ip_address.value)  # pyright: ignore[reportUnknownVariableType]
 
     def get_filtered_base_system_images(
         self,
@@ -822,7 +820,7 @@ class Session(object):
             auto_restart,
             auto_select_dependencies,
             auto_select_recommends,
-            software_to_install._handle,
+            software_to_install._handle,  # pyright: ignore[reportPrivateUsage]
             len(c_components_to_uninstall),
             ctypes.cast(c_components_to_uninstall, ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
             ctypes.pointer(broken_dependency_handle),
@@ -1042,7 +1040,7 @@ class Session(object):
         if issubclass(c_type, ctypes.c_void_p):
             return value
 
-        return c_string_decode(value.value)
+        return cast(str, c_string_decode(value.value))
 
     def _set_property(self, id: int, value: Any, c_type: Any, nisyscfg_type: int) -> None:
         if c_type == ctypes.c_char_p:

@@ -1,9 +1,19 @@
 """Property definitions and access helpers for NI System Configuration."""
 
 import ctypes
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, Type, TypeVar, Union, cast
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Iterator,
+    Optional,
+    Type,
+    TYPE_CHECKING,
+    TypeVar,
+    Union,
+)
 
-import nisyscfg.timestamp
+import nisyscfg
 from nisyscfg.enums import (
     AccessType,
     AdapterMode,
