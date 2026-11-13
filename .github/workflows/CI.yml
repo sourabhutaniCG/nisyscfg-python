@@ -40,13 +40,12 @@ jobs:
     needs: check_packages
     uses: ./.github/workflows/test_wheel_build.yml
     
-  report_test_results:
-    name: Report test results
-    if: ${{ always() }}
-    needs: test_packages
-    uses: ./.github/workflows/report_test_results.yml
-    permissions:
-      checks: write # needed to push the aggregated report
-      pull-requests: write # needed to post the report to the PR
-      
-      
+  upload_event_file:
+    name: Upload event file
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload event file
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: event_file
+          path: ${{ github.event_path }}  
